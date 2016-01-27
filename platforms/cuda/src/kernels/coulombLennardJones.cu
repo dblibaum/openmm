@@ -28,6 +28,9 @@
     }
     else {
 #if HAS_LENNARD_JONES
+        real alpha = 1;
+        if (useRest = 1.0)
+            real alpha = bm/b0*(group1*group2) + sqrt(bm/b0)*(group1*(1-group2)+(1-group1)*group2) + (1-group1)*(1-group2);
         real sig = sigmaEpsilon1.x + sigmaEpsilon2.x;
         real sig2 = invR*sig;
         sig2 *= sig2;
@@ -44,11 +47,11 @@
             ljEnergy *= switchValue;
         }
         #endif
-        tempForce += prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
-        tempEnergy += includeInteraction ? ljEnergy + prefactor*erfcAlphaR : 0;
+        tempForce += alpha*prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
+        tempEnergy += includeInteraction ? alpha*(ljEnergy + prefactor*erfcAlphaR) : 0;
 #else
-        tempForce = prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
-        tempEnergy += includeInteraction ? prefactor*erfcAlphaR : 0;
+        tempForce = alpha*prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
+        tempEnergy += includeInteraction ? alpha*prefactor*erfcAlphaR : 0;
 #endif
     }
     dEdR += includeInteraction ? tempForce*invR*invR : 0;

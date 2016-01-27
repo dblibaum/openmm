@@ -591,7 +591,7 @@ private:
 class CudaCalcNonbondedForceKernel : public CalcNonbondedForceKernel {
 public:
     CudaCalcNonbondedForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) : CalcNonbondedForceKernel(name, platform),
-            cu(cu), hasInitializedFFT(false), sigmaEpsilon(NULL), exceptionParams(NULL), cosSinSums(NULL), directPmeGrid(NULL), reciprocalPmeGrid(NULL),
+            cu(cu), hasInitializedFFT(false), sigmaEpsilon(NULL), dGroup(NULL), exceptionParams(NULL), cosSinSums(NULL), directPmeGrid(NULL), reciprocalPmeGrid(NULL),
             pmeBsplineModuliX(NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL),  pmeAtomRange(NULL), pmeAtomGridIndex(NULL), pmeEnergyBuffer(NULL), sort(NULL), fft(NULL), pmeio(NULL) {
     }
     ~CudaCalcNonbondedForceKernel();
@@ -648,6 +648,7 @@ private:
     CudaContext& cu;
     bool hasInitializedFFT;
     CudaArray* sigmaEpsilon;
+    CudaArray* dGroup;
     CudaArray* exceptionParams;
     CudaArray* cosSinSums;
     CudaArray* directPmeGrid;
@@ -680,6 +681,7 @@ private:
     int interpolateForceThreads;
     int gridSizeX, gridSizeY, gridSizeZ;
     bool hasCoulomb, hasLJ, usePmeStream, useCudaFFT;
+    UseRest useRest;
     NonbondedMethod nonbondedMethod;
     static const int PmeOrder = 5;
 };

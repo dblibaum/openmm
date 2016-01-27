@@ -1483,6 +1483,8 @@ CudaCalcNonbondedForceKernel::~CudaCalcNonbondedForceKernel() {
     cu.setAsCurrent();
     if (sigmaEpsilon != NULL)
         delete sigmaEpsilon;
+    if (dGroup != NULL)
+        delete dGroup;
     if (exceptionParams != NULL)
         delete exceptionParams;
     if (cosSinSums != NULL)
@@ -1531,7 +1533,8 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+        float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         exclusions.push_back(pair<int, int>(particle1, particle2));
         if (chargeProd != 0.0 || epsilon != 0.0)
             exceptions.push_back(i);
@@ -1541,23 +1544,27 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
 
     int numParticles = force.getNumParticles();
     sigmaEpsilon = CudaArray::create<float2>(cu, cu.getPaddedNumAtoms(), "sigmaEpsilon");
+    dGroup = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(), "group");
     CudaArray& posq = cu.getPosq();
     vector<double4> temp(posq.getSize());
     float4* posqf = (float4*) &temp[0];
     double4* posqd = (double4*) &temp[0];
     vector<float2> sigmaEpsilonVector(cu.getPaddedNumAtoms(), make_float2(0, 0));
+    vector<float> dGroupVector(cu.getPaddedNumAtoms(), 0.0);
     vector<vector<int> > exclusionList(numParticles);
     double sumSquaredCharges = 0.0;
     hasCoulomb = false;
     hasLJ = false;
     for (int i = 0; i < numParticles; i++) {
         double charge, sigma, epsilon;
-        force.getParticleParameters(i, charge, sigma, epsilon);
+        float group;
+        force.getParticleParameters(i, charge, sigma, epsilon, group);
         if (cu.getUseDoublePrecision())
             posqd[i] = make_double4(0, 0, 0, charge);
         else
             posqf[i] = make_float4(0, 0, 0, (float) charge);
         sigmaEpsilonVector[i] = make_float2((float) (0.5*sigma), (float) (2.0*sqrt(epsilon)));
+        dGroupVector[i] = group;
         exclusionList[i].push_back(i);
         sumSquaredCharges += charge*charge;
         if (charge != 0.0)
@@ -1571,6 +1578,20 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     }
     posq.upload(&temp[0]);
     sigmaEpsilon->upload(sigmaEpsilonVector);
+    dGroup->upload(dGroupVector);
+
+    // Upload useRest argument to device
+    vector<float> useRestVector(1, 0.0);
+    dUseRest = CudaArray::create<float>(cu, 1, "useRest");
+    useRest = CalcNonbondedForceKernel::UseRest(force.getUseRest());
+    if (useRest == Yes)
+        useRestVector[0] = 1.0;
+    dUseRest->upload(useRestVector);
+
+    // Add the argument to the kernel
+    cu.getNonbondedUtilities().addArgument(CudaNonbondedUtilities::ParameterInfo("useRest", "float", 1, sizeof(float),
+                                                                                 dUseRest->getDevicePointer()));
+
     nonbondedMethod = CalcNonbondedForceKernel::NonbondedMethod(force.getNonbondedMethod());
     bool useCutoff = (nonbondedMethod != NoCutoff);
     bool usePeriodic = (nonbondedMethod != NoCutoff && nonbondedMethod != CutoffNonPeriodic);
@@ -1812,6 +1833,9 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     if (hasLJ)
         cu.getNonbondedUtilities().addParameter(CudaNonbondedUtilities::ParameterInfo("sigmaEpsilon", "float", 2, sizeof(float2), sigmaEpsilon->getDevicePointer()));
 
+    // Add REST group parameter to kernel
+    cu.getNonbondedUtilities().addParameter(CudaNonbondedUtilities::ParameterInfo("group", "float", 1, sizeof(float), dGroup->getDevicePointer()));
+
     // Initialize the exceptions.
 
     int numContexts = cu.getPlatformData().contexts.size();
@@ -1948,7 +1972,8 @@ void CudaCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& context,
     if (!hasCoulomb || !hasLJ) {
         for (int i = 0; i < force.getNumParticles(); i++) {
             double charge, sigma, epsilon;
-            force.getParticleParameters(i, charge, sigma, epsilon);
+            float group;
+            force.getParticleParameters(i, charge, sigma, epsilon, group);
             if (!hasCoulomb && charge != 0.0)
                 throw OpenMMException("updateParametersInContext: The nonbonded force kernel does not include Coulomb interactions, because all charges were originally 0");
             if (!hasLJ && epsilon != 0.0)
@@ -1959,7 +1984,8 @@ void CudaCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& context,
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+        float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if (exceptionAtoms.size() > exceptions.size() && make_pair(particle1, particle2) == exceptionAtoms[exceptions.size()])
             exceptions.push_back(i);
         else if (chargeProd != 0.0 || epsilon != 0.0)
@@ -1977,31 +2003,36 @@ void CudaCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& context,
     float4* posqf = (float4*) cu.getPinnedBuffer();
     double4* posqd = (double4*) cu.getPinnedBuffer();
     vector<float2> sigmaEpsilonVector(cu.getPaddedNumAtoms(), make_float2(0, 0));
+    vector<float> dGroupVector(cu.getPaddedNumAtoms(), 0.0);
     double sumSquaredCharges = 0.0;
     const vector<int>& order = cu.getAtomIndex();
     for (int i = 0; i < force.getNumParticles(); i++) {
         int index = order[i];
         double charge, sigma, epsilon;
-        force.getParticleParameters(index, charge, sigma, epsilon);
+        float group;
+        force.getParticleParameters(index, charge, sigma, epsilon, group);
         if (cu.getUseDoublePrecision())
             posqd[i].w = charge;
         else
             posqf[i].w = (float) charge;
         sigmaEpsilonVector[index] = make_float2((float) (0.5*sigma), (float) (2.0*sqrt(epsilon)));
+        dGroupVector[index] = group;
         sumSquaredCharges += charge*charge;
     }
     posq.upload(cu.getPinnedBuffer());
     sigmaEpsilon->upload(sigmaEpsilonVector);
+    dGroup->upload(dGroupVector);
     
     // Record the exceptions.
     
     if (numExceptions > 0) {
         vector<vector<int> > atoms(numExceptions, vector<int>(2));
-        vector<float4> exceptionParamsVector(numExceptions);
+        vector<float5> exceptionParamsVector(numExceptions);
         for (int i = 0; i < numExceptions; i++) {
             double chargeProd, sigma, epsilon;
-            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon);
-            exceptionParamsVector[i] = make_float4((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f);
+            float group;
+            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon, group);
+            exceptionParamsVector[i] = make_float5((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f, group);
         }
         exceptionParams->upload(exceptionParamsVector);
     }
