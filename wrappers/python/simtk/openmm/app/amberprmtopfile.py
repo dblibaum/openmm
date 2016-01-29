@@ -160,7 +160,7 @@ class AmberPrmtopFile(object):
                      implicitSolventKappa=None, temperature=298.15*u.kelvin,
                      soluteDielectric=1.0, solventDielectric=78.5,
                      removeCMMotion=True, hydrogenMass=None, ewaldErrorTolerance=0.0005,
-                     switchDistance=0.0*u.nanometer):
+                     switchDistance=0.0*u.nanometer, particleGroupList=[]):
         """Construct an OpenMM System representing the topology described by this
         prmtop file.
 
@@ -207,6 +207,8 @@ class AmberPrmtopFile(object):
             turned on for Lennard-Jones interactions. If the switchDistance is 0
             or evaluates to boolean False, no switching function will be used.
             Values greater than nonbondedCutoff or less than 0 raise ValueError
+        particleGroupList : list=[]
+            For REST, defines which group each particle belongs to by atom index.
 
         Returns
         -------

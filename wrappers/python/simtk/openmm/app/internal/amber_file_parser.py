@@ -579,7 +579,7 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
           soluteDielectric=1.0, solventDielectric=78.5,
           implicitSolventKappa=0.0*(1/units.nanometer), nonbondedCutoff=None,
           nonbondedMethod='NoCutoff', scee=None, scnb=None, mm=None, verbose=False,
-          EwaldErrorTolerance=None, flexibleConstraints=True, rigidWater=True, elements=None):
+          EwaldErrorTolerance=None, flexibleConstraints=True, rigidWater=True, elements=None, particleGroupList=[]):
     """
     Create an OpenMM System from an Amber prmtop file.
 
@@ -603,6 +603,7 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
       verbose (boolean) - if True, print out information on progress (default: False)
       flexibleConstraints (boolean) - if True, flexible bonds will be added in addition ot constrained bonds
       rigidWater (boolean=True) If true, water molecules will be fully rigid regardless of the value passed for the shake argument
+      particleGroupList (List=[]) For REST, defines which group each particle belongs to by atom index
 
     NOTES
 
@@ -834,9 +835,10 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
         for atom in prmtop._getAtomTypeIndexes():
             cforce.addParticle((atom-1,))
     else:
-        for (charge, (rVdw, epsilon)) in zip(prmtop.getCharges(), nonbondTerms):
+        # Modified to add particle group
+        for (charge, (rVdw, epsilon), group) in zip(prmtop.getCharges(), nonbondTerms, particleGroupList):
             sigma = rVdw * sigmaScale
-            force.addParticle(charge, sigma, epsilon)
+            force.addParticle(charge, sigma, epsilon, group)
         if has_1264:
             numTypes = prmtop.getNumTypes()
             nbidx = [int(x) for x in prmtop._raw_data['NONBONDED_PARM_INDEX']]
