@@ -17,16 +17,13 @@
     const real erfcAlphaR = (0.254829592f+(-0.284496736f+(1.421413741f+(-1.453152027f+1.061405429f*t)*t)*t)*t)*t*expAlphaRSqr;
 #endif
     real tempForce = 0.0f;
-	real alpha = 1.0f;
-	//if (useRest[0] == 1.0) {
-		//real b0 = (real) useRest[1];
-		//real bm = (real) useRest[2];
+    real alpha = 1.0f;
 #if USE_REST
-	real bm = b0bm.x;
-	real b0 = b0bm.y;
-	alpha = bm/b0*(group1*group2) + sqrt(bm/b0)*(group1*(1-group2)+(1-group1)*group2) + (1-group1)*(1-group2);
+    // Set scaling (alpha) based on bm/b0 and groups of interacting atoms.
+    real bm = b0bm.x;
+    real b0 = b0bm.y;
+    alpha = bm/b0*(group1*group2) + sqrt(bm/b0)*(group1*(1-group2)+(1-group1)*group2) + (1-group1)*(1-group2);
 #endif
-	//}
     if (needCorrection) {
         // Subtract off the part of this interaction that was included in the reciprocal space contribution.
 
@@ -56,13 +53,9 @@
         #endif
         tempForce += alpha*prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
         tempEnergy += includeInteraction ? alpha*(ljEnergy + prefactor*erfcAlphaR) : 0;
-		//tempForce += prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
-		//tempEnergy += includeInteraction ? (ljEnergy + prefactor*erfcAlphaR) : 0;
 #else
         tempForce = alpha*prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
         tempEnergy += includeInteraction ? alpha*prefactor*erfcAlphaR : 0;
-		//tempForce = prefactor*(erfcAlphaR+alphaR*expAlphaRSqr*TWO_OVER_SQRT_PI);
-		//tempEnergy += includeInteraction ? prefactor*erfcAlphaR : 0;
 #endif
     }
     dEdR += includeInteraction ? tempForce*invR*invR : 0;
