@@ -55,9 +55,9 @@ void testConstraints() {
         system.addParticle(16.0);
         system.addParticle(1.0);
         system.addParticle(1.0);
-        forceField->addParticle(-0.82, 0.317, 0.65);
-        forceField->addParticle(0.41, 1.0, 0.0);
-        forceField->addParticle(0.41, 1.0, 0.0);
+        forceField->addParticle(-0.82, 0.317, 0.65, 0);
+        forceField->addParticle(0.41, 1.0, 0.0, 0);
+        forceField->addParticle(0.41, 1.0, 0.0, 0);
         system.addConstraint(i*3, i*3+1, 0.1);
         system.addConstraint(i*3, i*3+2, 0.1);
         system.addConstraint(i*3+1, i*3+2, 0.163);

@@ -67,7 +67,7 @@ void testFindExceptions() {
     NonbondedForce nonbonded;
     vector<pair<int, int> > bonds;
     for (int i = 0; i < NUM_ATOMS; i++)
-        nonbonded.addParticle(1.0, 1.0, 2.0);
+        nonbonded.addParticle(1.0, 1.0, 2.0, 0.0);
     // loop over all main-chain atoms (even numbered atoms)
     for (int i = 0; i < NUM_ATOMS-1; i += 2)
     {
@@ -105,7 +105,8 @@ void testFindExceptions() {
     for (int i = 0; i < nonbonded.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        nonbonded.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        nonbonded.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if (chargeProd == 0) {
             // This is an exclusion.
 
@@ -130,12 +131,12 @@ void testFindExceptions() {
 void testReplaceExceptions() {
     NonbondedForce nonbonded;
     for (int i = 0; i < 10; i++)
-        nonbonded.addParticle(1.0, 1.0, 0.0);
-    nonbonded.addException(0, 1, 1.0, 0.0, 0.0);
-    nonbonded.addException(0, 2, 2.0, 0.0, 0.0);
-    nonbonded.addException(0, 3, 3.0, 0.0, 0.0);
+        nonbonded.addParticle(1.0, 1.0, 0.0, 0.0);
+    nonbonded.addException(0, 1, 1.0, 0.0, 0.0, 0.0);
+    nonbonded.addException(0, 2, 2.0, 0.0, 0.0, 0.0);
+    nonbonded.addException(0, 3, 3.0, 0.0, 0.0, 0.0);
     try {
-        nonbonded.addException(0, 3, 4.0, 0.0, 0.0);
+        nonbonded.addException(0, 3, 4.0, 0.0, 0.0, 0.0);
         throw std::exception();
     }
     catch (const OpenMMException ex) {
@@ -143,25 +144,26 @@ void testReplaceExceptions() {
     }
     int p1, p2;
     double charge, sigma, epsilon;
-    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon);
+	float group;
+    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon, group);
     ASSERT(p1 == 0);
     ASSERT(p2 == 3);
     ASSERT(charge == 3.0);
-    ASSERT(nonbonded.addException(0, 3, 4.0, 0.0, 0.0, true) == 2);
-    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon);
+    ASSERT(nonbonded.addException(0, 3, 4.0, 0.0, 0.0, 0.0, true) == 2);
+    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon, group);
     ASSERT(p1 == 0);
     ASSERT(p2 == 3);
     ASSERT(charge == 4.0);
-    ASSERT(nonbonded.addException(1, 3, 4.0, 0.0, 0.0) == 3);
+    ASSERT(nonbonded.addException(1, 3, 4.0, 0.0, 0.0, 0.0) == 3);
     try {
-        nonbonded.addException(3, 0, 5.0, 0.0, 0.0);
+        nonbonded.addException(3, 0, 5.0, 0.0, 0.0, 0.0);
         throw std::exception();
     }
     catch (const OpenMMException ex) {
         // This should have thrown an exception.
     }
-    ASSERT(nonbonded.addException(3, 0, 5.0, 0.0, 0.0, true) == 2);
-    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon);
+    ASSERT(nonbonded.addException(3, 0, 5.0, 0.0, 0.0, 0.0, true) == 2);
+    nonbonded.getExceptionParameters(2, p1, p2, charge, sigma, epsilon, group);
     ASSERT(p1 == 3);
     ASSERT(p2 == 0);
     ASSERT(charge == 5.0);

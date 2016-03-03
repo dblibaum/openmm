@@ -46,7 +46,7 @@ void testCheckpoint() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(i%2 == 0 ? 0.1 : -0.1, 0.2, 0.1);
+        nonbonded->addParticle(i%2 == 0 ? 0.1 : -0.1, 0.2, 0.1, 0);
         bool clash;
         do {
             clash = false;

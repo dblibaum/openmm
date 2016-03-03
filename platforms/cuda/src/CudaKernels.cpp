@@ -1361,9 +1361,10 @@ public:
     }
     bool areParticlesIdentical(int particle1, int particle2) {
         double charge1, charge2, sigma1, sigma2, epsilon1, epsilon2;
-        force.getParticleParameters(particle1, charge1, sigma1, epsilon1);
-        force.getParticleParameters(particle2, charge2, sigma2, epsilon2);
-        return (charge1 == charge2 && sigma1 == sigma2 && epsilon1 == epsilon2);
+		float grop1, grop2;
+        force.getParticleParameters(particle1, charge1, sigma1, epsilon1, grop1);
+        force.getParticleParameters(particle2, charge2, sigma2, epsilon2, grop2);
+        return (charge1 == charge2 && sigma1 == sigma2 && epsilon1 == epsilon2 && grop1 == grop2);
     }
     int getNumParticleGroups() {
         return force.getNumExceptions();
@@ -1371,7 +1372,8 @@ public:
     void getParticlesInGroup(int index, vector<int>& particles) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(index, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        force.getExceptionParameters(index, particle1, particle2, chargeProd, sigma, epsilon, group);
         particles.resize(2);
         particles[0] = particle1;
         particles[1] = particle2;
@@ -1379,9 +1381,10 @@ public:
     bool areGroupsIdentical(int group1, int group2) {
         int particle1, particle2;
         double chargeProd1, chargeProd2, sigma1, sigma2, epsilon1, epsilon2;
-        force.getExceptionParameters(group1, particle1, particle2, chargeProd1, sigma1, epsilon1);
-        force.getExceptionParameters(group2, particle1, particle2, chargeProd2, sigma2, epsilon2);
-        return (chargeProd1 == chargeProd2 && sigma1 == sigma2 && epsilon1 == epsilon2);
+		float grop1, grop2;
+        force.getExceptionParameters(group1, particle1, particle2, chargeProd1, sigma1, epsilon1, grop1);
+        force.getExceptionParameters(group2, particle1, particle2, chargeProd2, sigma2, epsilon2, grop2);
+        return (chargeProd1 == chargeProd2 && sigma1 == sigma2 && epsilon1 == epsilon2 && grop1 == grop2);
     }
 private:
     const NonbondedForce& force;
@@ -1580,17 +1583,15 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     sigmaEpsilon->upload(sigmaEpsilonVector);
     dGroup->upload(dGroupVector);
 
-    // Upload useRest argument to device
-    vector<float> useRestVector(1, 0.0);
-    dUseRest = CudaArray::create<float>(cu, 1, "useRest");
-    useRest = CalcNonbondedForceKernel::UseRest(force.getUseRest());
-    if (useRest == Yes)
-        useRestVector[0] = 1.0;
-    dUseRest->upload(useRestVector);
+	// Get useRest parameter to define preprocessor directive
+	useRest = CalcNonbondedForceKernel::UseRest(force.getUseRest());
 
-    // Add the argument to the kernel
-    cu.getNonbondedUtilities().addArgument(CudaNonbondedUtilities::ParameterInfo("useRest", "float", 1, sizeof(float),
-                                                                                 dUseRest->getDevicePointer()));
+    // Upload b0 and bm to device
+    vector<double> b0bm(2, 0.0);
+    CudaArray* db0bm = CudaArray::create<double>(cu, 2, "b0bm");
+    b0bm[0] = force.getb0();
+	b0bm[1] = force.getbm();
+    db0bm->upload(b0bm);
 
     nonbondedMethod = CalcNonbondedForceKernel::NonbondedMethod(force.getNonbondedMethod());
     bool useCutoff = (nonbondedMethod != NoCutoff);
@@ -1599,6 +1600,7 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     defines["HAS_COULOMB"] = (hasCoulomb ? "1" : "0");
     defines["HAS_LENNARD_JONES"] = (hasLJ ? "1" : "0");
     defines["USE_LJ_SWITCH"] = (useCutoff && force.getUseSwitchingFunction() ? "1" : "0");
+	defines["USE_REST"] = (useRest ? "1" : "0");
     if (useCutoff) {
         // Compute the reaction field constants.
 
@@ -1836,6 +1838,9 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
     // Add REST group parameter to kernel
     cu.getNonbondedUtilities().addParameter(CudaNonbondedUtilities::ParameterInfo("group", "float", 1, sizeof(float), dGroup->getDevicePointer()));
 
+	// Add REST b0bm argument to the kernel
+	cu.getNonbondedUtilities().addArgument(CudaNonbondedUtilities::ParameterInfo("b0bm", "double", 2, sizeof(double2), db0bm->getDevicePointer()));
+
     // Initialize the exceptions.
 
     int numContexts = cu.getPlatformData().contexts.size();
@@ -1849,7 +1854,8 @@ void CudaCalcNonbondedForceKernel::initialize(const System& system, const Nonbon
         vector<float4> exceptionParamsVector(numExceptions);
         for (int i = 0; i < numExceptions; i++) {
             double chargeProd, sigma, epsilon;
-            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon);
+			float group;
+            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon, group);
             exceptionParamsVector[i] = make_float4((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f);
             exceptionAtoms[i] = make_pair(atoms[i][0], atoms[i][1]);
         }
@@ -2027,12 +2033,12 @@ void CudaCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& context,
     
     if (numExceptions > 0) {
         vector<vector<int> > atoms(numExceptions, vector<int>(2));
-        vector<float5> exceptionParamsVector(numExceptions);
+        vector<float4> exceptionParamsVector(numExceptions);
         for (int i = 0; i < numExceptions; i++) {
             double chargeProd, sigma, epsilon;
             float group;
             force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon, group);
-            exceptionParamsVector[i] = make_float5((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f, group);
+            exceptionParamsVector[i] = make_float4((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f);
         }
         exceptionParams->upload(exceptionParamsVector);
     }

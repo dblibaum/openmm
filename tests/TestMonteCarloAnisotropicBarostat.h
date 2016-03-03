@@ -182,7 +182,7 @@ void testRandomSeed() {
     forceField->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0);
     }
     system.addForce(forceField);
     MonteCarloAnisotropicBarostat* barostat = new MonteCarloAnisotropicBarostat(Vec3(pressure, pressure, pressure), temp, true, true, true, 1);
@@ -364,7 +364,7 @@ void testEinsteinCrystal() {
                 initialPositions[1] = positions[i][1];
                 initialPositions[2] = positions[i][2];
                 force->addParticle(i, initialPositions);
-                nb->addParticle(0, initialLength/6, 0.1);
+                nb->addParticle(0, initialLength/6, 0.1, 0);
             }
             system.addForce(force);
             system.addForce(nb);
@@ -410,7 +410,7 @@ void testEinsteinCrystal() {
             initialPositions[1] = positions[i][1];
             initialPositions[2] = positions[i][2];
             force->addParticle(i, initialPositions);
-            nb->addParticle(0, initialLength/6, 0.1);
+            nb->addParticle(0, initialLength/6, 0.1, 0);
         }
         system.addForce(force);
         system.addForce(nb);

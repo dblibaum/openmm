@@ -105,7 +105,7 @@ void testReordering() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(0.0, 0.0, 0.0);
+        nonbonded->addParticle(0.0, 0.0, 0.0, 0);
         positions.push_back(Vec3(genrand_real2(sfmt)-0.5, genrand_real2(sfmt)-0.5, genrand_real2(sfmt)-0.5)*20);
     }
     VerletIntegrator integrator(0.001);

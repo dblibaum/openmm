@@ -67,8 +67,8 @@ void testCoulomb() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* forceField = new NonbondedForce();
-    forceField->addParticle(0.5, 1, 0);
-    forceField->addParticle(-1.5, 1, 0);
+    forceField->addParticle(0.5, 1, 0, 0);
+    forceField->addParticle(-1.5, 1, 0, 0);
     system.addForce(forceField);
     Context context(system, integrator, platform);
     vector<Vec3> positions(2);

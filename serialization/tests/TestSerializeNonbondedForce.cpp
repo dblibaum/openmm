@@ -53,11 +53,11 @@ void testSerialization() {
     double alpha = 0.5;
     int nx = 3, ny = 5, nz = 7;
     force.setPMEParameters(alpha, nx, ny, nz);
-    force.addParticle(1, 0.1, 0.01);
-    force.addParticle(0.5, 0.2, 0.02);
-    force.addParticle(-0.5, 0.3, 0.03);
-    force.addException(0, 1, 2, 0.5, 0.1);
-    force.addException(1, 2, 0.2, 0.4, 0.2);
+    force.addParticle(1, 0.1, 0.01, 0.0);
+    force.addParticle(0.5, 0.2, 0.02, 0.0);
+    force.addParticle(-0.5, 0.3, 0.03, 0.0);
+    force.addException(0, 1, 2, 0.5, 0.1, 0.0);
+    force.addException(1, 2, 0.2, 0.4, 0.2, 0.0);
 
     // Serialize and then deserialize it.
 
@@ -87,25 +87,29 @@ void testSerialization() {
     for (int i = 0; i < force.getNumParticles(); i++) {
         double charge1, sigma1, epsilon1;
         double charge2, sigma2, epsilon2;
-        force.getParticleParameters(i, charge1, sigma1, epsilon1);
-        force2.getParticleParameters(i, charge2, sigma2, epsilon2);
+		float group1, group2;
+        force.getParticleParameters(i, charge1, sigma1, epsilon1, group1);
+        force2.getParticleParameters(i, charge2, sigma2, epsilon2, group2);
         ASSERT_EQUAL(charge1, charge2);
         ASSERT_EQUAL(sigma1, sigma2);
         ASSERT_EQUAL(epsilon1, epsilon2);
+		ASSERT_EQUAL(group1, group2);
     }
     ASSERT_EQUAL(force.getNumExceptions(), force2.getNumExceptions());
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int a1, a2, b1, b2;
         double charge1, sigma1, epsilon1;
         double charge2, sigma2, epsilon2;
-        force.getExceptionParameters(i, a1, b1, charge1, sigma1, epsilon1);
-        force2.getExceptionParameters(i, a2, b2, charge2, sigma2, epsilon2);
+		float group1, group2;
+        force.getExceptionParameters(i, a1, b1, charge1, sigma1, epsilon1, group1);
+        force2.getExceptionParameters(i, a2, b2, charge2, sigma2, epsilon2, group2);
         ASSERT_EQUAL(a1, a2);
         ASSERT_EQUAL(b1, b2);
         ASSERT_EQUAL(charge1, charge2);
         ASSERT_EQUAL(sigma1, sigma2);
         ASSERT_EQUAL(epsilon1, epsilon2);
-    }
+		ASSERT_EQUAL(group1, group2);
+	}
 }
 
 int main() {

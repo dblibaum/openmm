@@ -156,6 +156,26 @@ public:
      * Set the method used for handling long range nonbonded interactions.
      */
     void setNonbondedMethod(NonbondedMethod method);
+	/**
+	* Get b0 for REST scaling.
+	*/
+	double getb0() const;
+	/**
+	* Set b0 for REST scaling.
+	*
+	* @param b0    the base energy
+	*/
+	void setb0(double energy);
+	/**
+	* Get bm for REST scaling.
+	*/
+	double getbm() const;
+	/**
+	* Set bm for REST scaling.
+	*
+	* @param bm    the scaled energy
+	*/
+	void setbm(double energy);
     /**
      * Get the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use
      * is NoCutoff, this value will have no effect.
@@ -273,7 +293,7 @@ public:
      * @param[out] epsilon   the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
      * @param[out] group     the group parameter for determining REST scaling
      */
-    void getParticleParameters(int index, double& charge, double& sigma, double& epsilon, float group) const;
+    void getParticleParameters(int index, double& charge, double& sigma, double& epsilon, float& group) const;
     /**
      * Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles,
      * it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles
@@ -302,8 +322,8 @@ public:
      *                   an exception is thrown.
      * @return the index of the exception that was added
      */
-    int addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon,
-                     bool replace = false, float group);
+    int addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group,
+                     bool replace = false);
     /**
      * Get the force field parameters for an interaction that should be calculated differently from others.
      *
@@ -410,7 +430,7 @@ private:
     class ExceptionInfo;
     UseRest useRest;
     NonbondedMethod nonbondedMethod;
-    double cutoffDistance, switchingDistance, rfDielectric, ewaldErrorTol, alpha;
+    double cutoffDistance, switchingDistance, rfDielectric, ewaldErrorTol, alpha, bm, b0;
     bool useSwitchingFunction, useDispersionCorrection;
     int recipForceGroup, nx, ny, nz;
     void addExclusionsToSet(const std::vector<std::set<int> >& bonded12, std::set<int>& exclusions, int baseParticle, int fromParticle, int currentLevel) const;
@@ -425,9 +445,11 @@ private:
  */
 class NonbondedForce::ParticleInfo {
 public:
-    double charge, sigma, epsilon, group;
+	double charge, sigma, epsilon; 
+	float group;
     ParticleInfo() {
-        charge = sigma = epsilon = group = 0.0;
+        charge = sigma = epsilon = 0.0;
+		group = 0.0;
     }
     ParticleInfo(double charge, double sigma, double epsilon, float group) :
         charge(charge), sigma(sigma), epsilon(epsilon), group(group) {
@@ -441,10 +463,12 @@ public:
 class NonbondedForce::ExceptionInfo {
 public:
     int particle1, particle2;
-    double chargeProd, sigma, epsilon, group;
+	double chargeProd, sigma, epsilon;
+	float group;
     ExceptionInfo() {
         particle1 = particle2 = -1;
-        chargeProd = sigma = epsilon = group = 0.0;
+        chargeProd = sigma = epsilon = 0.0;
+		group = 0.0;
     }
     ExceptionInfo(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group) :
         particle1(particle1), particle2(particle2), chargeProd(chargeProd), sigma(sigma), epsilon(epsilon), group(group) {

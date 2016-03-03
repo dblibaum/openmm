@@ -53,7 +53,7 @@ void testTemperature() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0);
     }
     system.addForce(forceField);
     AndersenThermostat* thermostat = new AndersenThermostat(temp, collisionFreq);
@@ -93,7 +93,7 @@ void testConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0);
     }
     system.addForce(forceField);
     system.addConstraint(0, 1, 1);
@@ -145,7 +145,7 @@ void testRandomSeed() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0);
     }
     system.addForce(forceField);
     AndersenThermostat* thermostat = new AndersenThermostat(temp, collisionFreq);

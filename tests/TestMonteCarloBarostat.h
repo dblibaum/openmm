@@ -51,7 +51,7 @@ void testChangingBoxSize() {
     NonbondedForce* nb = new NonbondedForce();
     nb->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     nb->setCutoffDistance(2.0);
-    nb->addParticle(1, 0.5, 0.5);
+    nb->addParticle(1, 0.5, 0.5, 0);
     system.addForce(nb);
     LangevinIntegrator integrator(300.0, 1.0, 0.01);
     Context context(system, integrator, platform);
@@ -148,7 +148,7 @@ void testRandomSeed() {
     forceField->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0);
     }
     system.addForce(forceField);
     MonteCarloBarostat* barostat = new MonteCarloBarostat(pressure, temp, 1);
@@ -230,9 +230,9 @@ void testWater() {
                 system.addParticle(16.0);
                 system.addParticle(1.0);
                 system.addParticle(1.0);
-                nonbonded->addParticle(-0.82, 0.316557, 0.650194);
-                nonbonded->addParticle(0.41, 1, 0);
-                nonbonded->addParticle(0.41, 1, 0);
+                nonbonded->addParticle(-0.82, 0.316557, 0.650194, 0);
+                nonbonded->addParticle(0.41, 1, 0, 0);
+                nonbonded->addParticle(0.41, 1, 0, 0);
                 Vec3 pos = Vec3(spacing*i, spacing*j, spacing*k);
                 positions.push_back(pos);
                 positions.push_back(pos+offset1);
@@ -240,9 +240,9 @@ void testWater() {
                 system.addConstraint(firstParticle, firstParticle+1, dOH);
                 system.addConstraint(firstParticle, firstParticle+2, dOH);
                 system.addConstraint(firstParticle+1, firstParticle+2, dHH);
-                nonbonded->addException(firstParticle, firstParticle+1, 0, 1, 0);
-                nonbonded->addException(firstParticle, firstParticle+2, 0, 1, 0);
-                nonbonded->addException(firstParticle+1, firstParticle+2, 0, 1, 0);
+                nonbonded->addException(firstParticle, firstParticle+1, 0, 1, 0, 0);
+                nonbonded->addException(firstParticle, firstParticle+2, 0, 1, 0, 0);
+                nonbonded->addException(firstParticle+1, firstParticle+2, 0, 1, 0, 0);
             }
         }
     }

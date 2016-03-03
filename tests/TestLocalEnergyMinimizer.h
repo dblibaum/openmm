@@ -94,8 +94,8 @@ void testLargeSystem() {
     for (int i = 0; i < numMolecules; i++) {
         system.addParticle(1.0);
         system.addParticle(1.0);
-        nonbonded->addParticle(-1.0, 0.2, 0.2);
-        nonbonded->addParticle(1.0, 0.2, 0.2);
+        nonbonded->addParticle(-1.0, 0.2, 0.2, 0);
+        nonbonded->addParticle(1.0, 0.2, 0.2, 0);
         positions[2*i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
         positions[2*i+1] = Vec3(positions[2*i][0]+1.0, positions[2*i][1], positions[2*i][2]);
         system.addConstraint(2*i, 2*i+1, 1.0);
@@ -152,9 +152,9 @@ void testVirtualSites() {
         system.addParticle(1.0);
         system.addParticle(1.0);
         system.addParticle(0.0);
-        nonbonded->addParticle(-1.0, 0.2, 0.2);
-        nonbonded->addParticle(0.5, 0.2, 0.2);
-        nonbonded->addParticle(0.5, 0.2, 0.2);
+        nonbonded->addParticle(-1.0, 0.2, 0.2, 0);
+        nonbonded->addParticle(0.5, 0.2, 0.2, 0);
+        nonbonded->addParticle(0.5, 0.2, 0.2, 0);
         positions[3*i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
         positions[3*i+1] = Vec3(positions[3*i][0]+1.0, positions[3*i][1], positions[3*i][2]);
         positions[3*i+2] = Vec3();

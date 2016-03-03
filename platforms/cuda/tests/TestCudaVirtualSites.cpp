@@ -57,9 +57,9 @@ void testReordering() {
         system.setVirtualSite(start+2, new TwoParticleAverageSite(start, start+1, 0.4, 0.6));
         system.addConstraint(start, start+1, 2.0);
         for (int i = 0; i < 3; i++) {
-            nonbonded->addParticle(0, 0.2, 1);
+            nonbonded->addParticle(0, 0.2, 1, 0);
             for (int j = 0; j < i; j++)
-                nonbonded->addException(start+i, start+j, 0, 1, 0);
+                nonbonded->addException(start+i, start+j, 0, 1, 0, 0.0);
         }
         Vec3 pos(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
         positions.push_back(pos);
@@ -80,9 +80,9 @@ void testReordering() {
         system.addConstraint(start, start+2, 1.0);
         system.addConstraint(start+1, start+2, sqrt(2.0));
         for (int i = 0; i < 4; i++) {
-            nonbonded->addParticle(0, 0.2, 1);
+            nonbonded->addParticle(0, 0.2, 1, 0);
             for (int j = 0; j < i; j++)
-                nonbonded->addException(start+i, start+j, 0, 1, 0);
+                nonbonded->addException(start+i, start+j, 0, 1, 0, 0.0);
         }
         Vec3 pos(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
         positions.push_back(pos);
@@ -104,9 +104,9 @@ void testReordering() {
         system.addConstraint(start, start+2, 1.0);
         system.addConstraint(start+1, start+2, sqrt(2.0));
         for (int i = 0; i < 4; i++) {
-            nonbonded->addParticle(0, 0.2, 1);
+            nonbonded->addParticle(0, 0.2, 1, 0);
             for (int j = 0; j < i; j++)
-                nonbonded->addException(start+i, start+j, 0, 1, 0);
+                nonbonded->addException(start+i, start+j, 0, 1, 0, 0.0);
         }
         Vec3 pos(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
         positions.push_back(pos);

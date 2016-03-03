@@ -60,9 +60,9 @@ void testSerialization() {
     for (int i = 0; i < numParticles/2; i++)
         system.addParticle(35.45);
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(1.0, 1.0,0.0);
+        nonbonded->addParticle(1.0, 1.0,0.0, 0);
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(-1.0, 1.0,0.0);
+        nonbonded->addParticle(-1.0, 1.0,0.0, 0);
     system.addForce(nonbonded);
 	system.addForce(new AndersenThermostat(393.3, 19.3));
 	system.addForce(new MonteCarloBarostat(25, 393.3, 25));

@@ -125,14 +125,14 @@ void testWater() {
         system.addParticle(1.0);  // H1
         system.addParticle(1.0);  // H2
         system.addParticle(0.0);  // M
-        nonbonded->addParticle(1.71636, 0.318395, 0.21094*4.184);
-        nonbonded->addParticle(-1.71636, 1, 0);
-        nonbonded->addParticle(0.55733, 1, 0);
-        nonbonded->addParticle(0.55733, 1, 0);
-        nonbonded->addParticle(-1.11466, 1, 0);
+        nonbonded->addParticle(1.71636, 0.318395, 0.21094*4.184, 0);
+        nonbonded->addParticle(-1.71636, 1, 0, 0);
+        nonbonded->addParticle(0.55733, 1, 0, 0);
+        nonbonded->addParticle(0.55733, 1, 0, 0);
+        nonbonded->addParticle(-1.11466, 1, 0, 0);
         for (int j = 0; j < 5; j++)
             for (int k = 0; k < j; k++)
-                nonbonded->addException(startIndex+j, startIndex+k, 0, 1, 0);
+                nonbonded->addException(startIndex+j, startIndex+k, 0, 1, 0, 0);
         system.addConstraint(startIndex, startIndex+2, 0.09572);
         system.addConstraint(startIndex, startIndex+3, 0.09572);
         system.addConstraint(startIndex+2, startIndex+3, 0.15139);

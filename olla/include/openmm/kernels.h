@@ -543,6 +543,10 @@ public:
  */
 class CalcNonbondedForceKernel : public KernelImpl {
 public:
+	enum UseRest {
+		No = 0,
+		Yes = 1
+	};
     enum NonbondedMethod {
         NoCutoff = 0,
         CutoffNonPeriodic = 1,

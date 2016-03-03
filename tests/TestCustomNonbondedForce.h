@@ -583,23 +583,23 @@ void testCoulombLennardJones() {
     vector<double> params(3);
     for (int i = 0; i < numMolecules; i++) {
         if (i < numMolecules/2) {
-            standardNonbonded->addParticle(1.0, 0.2, 0.1);
+            standardNonbonded->addParticle(1.0, 0.2, 0.1, 0);
             params[0] = 1.0;
             params[1] = 0.2;
             params[2] = 0.1;
             customNonbonded->addParticle(params);
-            standardNonbonded->addParticle(-1.0, 0.1, 0.1);
+            standardNonbonded->addParticle(-1.0, 0.1, 0.1, 0);
             params[0] = -1.0;
             params[1] = 0.1;
             customNonbonded->addParticle(params);
         }
         else {
-            standardNonbonded->addParticle(1.0, 0.2, 0.2);
+            standardNonbonded->addParticle(1.0, 0.2, 0.2, 0);
             params[0] = 1.0;
             params[1] = 0.2;
             params[2] = 0.2;
             customNonbonded->addParticle(params);
-            standardNonbonded->addParticle(-1.0, 0.1, 0.2);
+            standardNonbonded->addParticle(-1.0, 0.1, 0.2, 0);
             params[0] = -1.0;
             params[1] = 0.1;
             customNonbonded->addParticle(params);
@@ -608,7 +608,7 @@ void testCoulombLennardJones() {
         positions[2*i+1] = Vec3(positions[2*i][0]+1.0, positions[2*i][1], positions[2*i][2]);
         velocities[2*i] = Vec3(genrand_real2(sfmt), genrand_real2(sfmt), genrand_real2(sfmt));
         velocities[2*i+1] = Vec3(genrand_real2(sfmt), genrand_real2(sfmt), genrand_real2(sfmt));
-        standardNonbonded->addException(2*i, 2*i+1, 0.0, 1.0, 0.0);
+        standardNonbonded->addException(2*i, 2*i+1, 0.0, 1.0, 0.0, 0);
         customNonbonded->addExclusion(2*i, 2*i+1);
     }
     standardNonbonded->setNonbondedMethod(NonbondedForce::NoCutoff);
@@ -714,11 +714,11 @@ void testLongRangeCorrection() {
                 standardSystem.addParticle(1.0);
                 customSystem.addParticle(1.0);
                 if (index%2 == 0) {
-                    standardNonbonded->addParticle(0, params1[0], params1[1]);
+                    standardNonbonded->addParticle(0, params1[0], params1[1], 0);
                     customNonbonded->addParticle(params1);
                 }
                 else {
-                    standardNonbonded->addParticle(0, params2[0], params2[1]);
+                    standardNonbonded->addParticle(0, params2[0], params2[1], 0);
                     customNonbonded->addParticle(params2);
                 }
                 positions[index] = Vec3(i*boxSize/gridSize, j*boxSize/gridSize, k*boxSize/gridSize);

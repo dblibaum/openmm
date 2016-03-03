@@ -61,8 +61,8 @@ void testTruncatedOctahedron() {
     for (int i = 0; i < numMolecules; i++) {
         system.addParticle(1.0);
         system.addParticle(1.0);
-        force->addParticle(-1, 0.2, 0.2);
-        force->addParticle(1, 0.2, 0.2);
+        force->addParticle(-1, 0.2, 0.2, 0.0);
+        force->addParticle(1, 0.2, 0.2, 0.0);
         positions[2*i] = a*(5*genrand_real2(sfmt)-2) + b*(5*genrand_real2(sfmt)-2) + c*(5*genrand_real2(sfmt)-2);
         positions[2*i+1] = positions[2*i] + Vec3(1.0, 0.0, 0.0);
         system.addConstraint(2*i, 2*i+1, 1.0);

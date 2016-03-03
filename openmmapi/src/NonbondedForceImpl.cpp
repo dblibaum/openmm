@@ -66,7 +66,8 @@ void NonbondedForceImpl::initialize(ContextImpl& context) {
     for (int i = 0; i < owner.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        owner.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        owner.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if (particle1 < 0 || particle1 >= owner.getNumParticles()) {
             stringstream msg;
             msg << "NonbondedForce: Illegal particle index for an exception: ";
@@ -227,7 +228,8 @@ double NonbondedForceImpl::calcDispersionCorrection(const System& system, const 
     map<pair<double, double>, int> classCounts;
     for (int i = 0; i < force.getNumParticles(); i++) {
         double charge, sigma, epsilon;
-        force.getParticleParameters(i, charge, sigma, epsilon);
+		float group;
+        force.getParticleParameters(i, charge, sigma, epsilon, group);
         pair<double, double> key = make_pair(sigma, epsilon);
         map<pair<double, double>, int>::iterator entry = classCounts.find(key);
         if (entry == classCounts.end())

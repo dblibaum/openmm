@@ -47,12 +47,12 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-NonbondedForce::NonbondedForce() : useRest(No), nonbondedMethod(NoCutoff), cutoffDistance(1.0), switchingDistance(-1.0), rfDielectric(78.3),
+NonbondedForce::NonbondedForce() : useRest(No), nonbondedMethod(NoCutoff), b0(1.0), bm(1.0), cutoffDistance(1.0), switchingDistance(-1.0), rfDielectric(78.3),
         ewaldErrorTol(5e-4), alpha(0.0), useSwitchingFunction(false), useDispersionCorrection(true), recipForceGroup(-1), nx(0), ny(0), nz(0) {
 }
 
 NonbondedForce::UseRest NonbondedForce::getUseRest() const {
-    return UseRest;
+    return useRest;
 }
 
 void NonbondedForce::setUseRest(UseRest yesno) {
@@ -65,6 +65,22 @@ NonbondedForce::NonbondedMethod NonbondedForce::getNonbondedMethod() const {
 
 void NonbondedForce::setNonbondedMethod(NonbondedMethod method) {
     nonbondedMethod = method;
+}
+
+double NonbondedForce::getb0() const {
+	return b0;
+}
+
+void NonbondedForce::setb0(double energy) {
+	b0 = energy;
+}
+
+double NonbondedForce::getbm() const {
+	return bm;
+}
+
+void NonbondedForce::setbm(double energy) {
+	bm = energy;
 }
 
 double NonbondedForce::getCutoffDistance() const {
@@ -146,7 +162,7 @@ void NonbondedForce::setParticleParameters(int index, double charge, double sigm
     particles[index].group = group;
 }
 
-int NonbondedForce::addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, bool replace, float group) {
+int NonbondedForce::addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group, bool replace) {
     map<pair<int, int>, int>::iterator iter = exceptionMap.find(pair<int, int>(particle1, particle2));
     int newIndex;
     if (iter == exceptionMap.end())
@@ -223,12 +239,12 @@ void NonbondedForce::createExceptionsFromBonds(const vector<pair<int, int> >& bo
                     const double chargeProd = coulomb14Scale*particle1.charge*particle2.charge;
                     const double sigma = 0.5*(particle1.sigma+particle2.sigma);
                     const double epsilon = lj14Scale*std::sqrt(particle1.epsilon*particle2.epsilon);
-                    addException(*iter, i, chargeProd, sigma, epsilon);
+                    addException(*iter, i, chargeProd, sigma, epsilon, 0.0);
                 }
                 else {
                     // This interaction should be completely excluded.
 
-                    addException(*iter, i, 0.0, 1.0, 0.0);
+                    addException(*iter, i, 0.0, 1.0, 0.0, 0.0);
                 }
             }
     }

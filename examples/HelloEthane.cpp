@@ -269,7 +269,7 @@ myInitializeOpenMM( const MyAtomInfo    atoms[],
         nonbond.addParticle(atype.charge,
                             atype.vdwRadiusInAngstroms * OpenMM::NmPerAngstrom 
                                                        * OpenMM::SigmaPerVdwRadius,
-                            atype.vdwEnergyInKcal      * OpenMM::KJPerKcal);
+                            atype.vdwEnergyInKcal      * OpenMM::KJPerKcal, 0.0);
         // Convert the initial position to nm and append to the array.
         const Vec3 posInNm(atoms[n].initPosInAng[0] * OpenMM::NmPerAngstrom,
                            atoms[n].initPosInAng[1] * OpenMM::NmPerAngstrom,

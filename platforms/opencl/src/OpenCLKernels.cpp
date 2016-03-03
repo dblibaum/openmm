@@ -1524,7 +1524,7 @@ void OpenCLCalcNonbondedForceKernel::initialize(const System& system, const Nonb
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         exclusions.push_back(pair<int, int>(particle1, particle2));
         if (chargeProd != 0.0 || epsilon != 0.0)
             exceptions.push_back(i);
@@ -1543,7 +1543,8 @@ void OpenCLCalcNonbondedForceKernel::initialize(const System& system, const Nonb
     hasLJ = false;
     for (int i = 0; i < numParticles; i++) {
         double charge, sigma, epsilon;
-        force.getParticleParameters(i, charge, sigma, epsilon);
+        float group;
+        force.getParticleParameters(i, charge, sigma, epsilon, group);
         if (cl.getUseDoublePrecision())
             posqd[i] = mm_double4(0, 0, 0, charge);
         else
@@ -1792,7 +1793,8 @@ void OpenCLCalcNonbondedForceKernel::initialize(const System& system, const Nonb
         vector<mm_float4> exceptionParamsVector(numExceptions);
         for (int i = 0; i < numExceptions; i++) {
             double chargeProd, sigma, epsilon;
-            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon);
+            float group;
+            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon, group);
             exceptionParamsVector[i] = mm_float4((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f);
             exceptionAtoms[i] = make_pair(atoms[i][0], atoms[i][1]);
         }
@@ -2016,7 +2018,8 @@ void OpenCLCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& contex
     if (!hasCoulomb || !hasLJ) {
         for (int i = 0; i < force.getNumParticles(); i++) {
             double charge, sigma, epsilon;
-            force.getParticleParameters(i, charge, sigma, epsilon);
+            float group;
+            force.getParticleParameters(i, charge, sigma, epsilon, group);
             if (!hasCoulomb && charge != 0.0)
                 throw OpenMMException("updateParametersInContext: The nonbonded force kernel does not include Coulomb interactions, because all charges were originally 0");
             if (!hasLJ && epsilon != 0.0)
@@ -2027,7 +2030,8 @@ void OpenCLCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& contex
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+        float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if (exceptionAtoms.size() > exceptions.size() && make_pair(particle1, particle2) == exceptionAtoms[exceptions.size()])
             exceptions.push_back(i);
         else if (chargeProd != 0.0 || epsilon != 0.0)
@@ -2050,7 +2054,8 @@ void OpenCLCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& contex
     for (int i = 0; i < force.getNumParticles(); i++) {
         int index = order[i];
         double charge, sigma, epsilon;
-        force.getParticleParameters(index, charge, sigma, epsilon);
+        float group;
+        force.getParticleParameters(index, charge, sigma, epsilon, group);
         if (cl.getUseDoublePrecision())
             posqd[i].w = charge;
         else
@@ -2065,11 +2070,12 @@ void OpenCLCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& contex
     
     if (numExceptions > 0) {
         vector<vector<int> > atoms(numExceptions, vector<int>(2));
-        vector<mm_float4> exceptionParamsVector(numExceptions);
+        vector<mm_float5> exceptionParamsVector(numExceptions);
         for (int i = 0; i < numExceptions; i++) {
             double chargeProd, sigma, epsilon;
-            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon);
-            exceptionParamsVector[i] = mm_float4((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f);
+            float group;
+            force.getExceptionParameters(exceptions[startIndex+i], atoms[i][0], atoms[i][1], chargeProd, sigma, epsilon, group);
+            exceptionParamsVector[i] = mm_float5((float) (ONE_4PI_EPS0*chargeProd), (float) sigma, (float) (4.0*epsilon), 0.0f, 0.0f);
         }
         exceptionParams->upload(exceptionParamsVector);
     }

@@ -302,9 +302,9 @@ void testConservationLaws() {
     system.setVirtualSite(2, new TwoParticleAverageSite(0, 1, 0.4, 0.6));
     system.addConstraint(0, 1, 2.0);
     for (int i = 0; i < 3; i++) {
-        forceField->addParticle(0, 1, 10);
+        forceField->addParticle(0, 1, 10, 0.0);
         for (int j = 0; j < i; j++)
-            forceField->addException(i, j, 0, 1, 0);
+            forceField->addException(i, j, 0, 1, 0, 0.0);
     }
     positions.push_back(Vec3(0, 0, 0));
     positions.push_back(Vec3(2, 0, 0));
@@ -321,9 +321,9 @@ void testConservationLaws() {
     system.addConstraint(3, 5, 1.0);
     system.addConstraint(4, 5, sqrt(2.0));
     for (int i = 0; i < 4; i++) {
-        forceField->addParticle(0, 1, 10);
+        forceField->addParticle(0, 1, 10, 0.0);
         for (int j = 0; j < i; j++)
-            forceField->addException(i+3, j+3, 0, 1, 0);
+            forceField->addException(i+3, j+3, 0, 1, 0, 0.0);
     }
     positions.push_back(Vec3(0, 0, 1));
     positions.push_back(Vec3(1, 0, 1));
@@ -341,9 +341,9 @@ void testConservationLaws() {
     system.addConstraint(7, 9, 1.0);
     system.addConstraint(8, 9, sqrt(2.0));
     for (int i = 0; i < 4; i++) {
-        forceField->addParticle(0, 1, 10);
+        forceField->addParticle(0, 1, 10, 0.0);
         for (int j = 0; j < i; j++)
-            forceField->addException(i+7, j+7, 0, 1, 0);
+            forceField->addException(i+7, j+7, 0, 1, 0, 0.0);
     }
     positions.push_back(Vec3(1, 0, -1));
     positions.push_back(Vec3(2, 0, -1));
@@ -361,9 +361,9 @@ void testConservationLaws() {
     system.addConstraint(11, 13, 1.0);
     system.addConstraint(12, 13, sqrt(2.0));
     for (int i = 0; i < 4; i++) {
-        forceField->addParticle(0, 1, 10);
+        forceField->addParticle(0, 1, 10, 0.0);
         for (int j = 0; j < i; j++)
-            forceField->addException(i+11, j+11, 0, 1, 0);
+            forceField->addException(i+11, j+11, 0, 1, 0, 0.0);
     }
     positions.push_back(Vec3(1, 2, 0));
     positions.push_back(Vec3(2, 2, 0));
@@ -421,9 +421,9 @@ void testOverlappingSites() {
     system.addParticle(1.0);
     NonbondedForce* nonbonded = new NonbondedForce();
     system.addForce(nonbonded);
-    nonbonded->addParticle(1.0, 0.0, 0.0);
-    nonbonded->addParticle(-0.5, 0.0, 0.0);
-    nonbonded->addParticle(-0.5, 0.0, 0.0);
+    nonbonded->addParticle(1.0, 0.0, 0.0, 0.0);
+    nonbonded->addParticle(-0.5, 0.0, 0.0, 0.0);
+    nonbonded->addParticle(-0.5, 0.0, 0.0, 0.0);
     vector<Vec3> positions;
     positions.push_back(Vec3(0, 0, 0));
     positions.push_back(Vec3(10, 0, 0));
@@ -433,7 +433,7 @@ void testOverlappingSites() {
         double u = 0.1*((i+1)%4);
         double v = 0.05*i;
         system.setVirtualSite(3+i, new ThreeParticleAverageSite(0, 1, 2, u, v, 1-u-v));
-        nonbonded->addParticle(i%2 == 0 ? -1.0 : 1.0, 0.0, 0.0);
+        nonbonded->addParticle(i%2 == 0 ? -1.0 : 1.0, 0.0, 0.0, 0.0);
         positions.push_back(Vec3());
     }
     VerletIntegrator i1(0.002);

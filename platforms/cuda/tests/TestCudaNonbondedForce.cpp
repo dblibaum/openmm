@@ -39,7 +39,7 @@ void testParallelComputation(NonbondedForce::NonbondedMethod method) {
         system.addParticle(1.0);
     NonbondedForce* force = new NonbondedForce();
     for (int i = 0; i < numParticles; i++)
-        force->addParticle(i%2-0.5, 0.5, 1.0);
+        force->addParticle(i%2-0.5, 0.5, 1.0, 0.0);
     force->setNonbondedMethod(method);
     system.addForce(force);
     system.setDefaultPeriodicBoxVectors(Vec3(5,0,0), Vec3(0,5,0), Vec3(0,0,5));
@@ -52,7 +52,7 @@ void testParallelComputation(NonbondedForce::NonbondedMethod method) {
         for (int j = 0; j < i; ++j) {
             Vec3 delta = positions[i]-positions[j];
             if (delta.dot(delta) < 0.1)
-                force->addException(i, j, 0, 1, 0);
+                force->addException(i, j, 0, 1, 0, 0.0);
         }
     
     // Create two contexts, one with a single device and one with two devices.
@@ -79,8 +79,9 @@ void testParallelComputation(NonbondedForce::NonbondedMethod method) {
 
     for (int i = 0; i < numParticles; i += 5) {
         double charge, sigma, epsilon;
-        force->getParticleParameters(i, charge, sigma, epsilon);
-        force->setParticleParameters(i, 0.9*charge, sigma, epsilon);
+		float group;
+        force->getParticleParameters(i, charge, sigma, epsilon, group);
+        force->setParticleParameters(i, 0.9*charge, sigma, epsilon, group);
     }
     force->updateParametersInContext(context1);
     force->updateParametersInContext(context2);
@@ -105,7 +106,7 @@ void testReordering() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(0.0, 0.0, 0.0);
+        nonbonded->addParticle(0.0, 0.0, 0.0, 0);
         positions.push_back(Vec3(genrand_real2(sfmt)-0.5, genrand_real2(sfmt)-0.5, genrand_real2(sfmt)-0.5)*20);
     }
     VerletIntegrator integrator(0.001);

@@ -50,7 +50,7 @@ void simulateArgon()
         OpenMM_System_addParticle(system, 39.95); /*mass of Ar, grams/mole*/
 
         /* charge, L-J sigma (nm), well depth (kJ) */
-        OpenMM_NonbondedForce_addParticle(nonbond, 0.0, 0.3350, 0.996); /*vdWRad(Ar)=.188 nm*/
+        OpenMM_NonbondedForce_addParticle(nonbond, 0.0, 0.3350, 0.996, 0.0); /*vdWRad(Ar)=.188 nm*/
     }
 
     /* Create particular integrator, and recast to generic one. */

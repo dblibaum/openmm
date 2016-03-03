@@ -129,7 +129,7 @@ void testRandomSeed() {
     forceField->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     MonteCarloMembraneBarostat* barostat = new MonteCarloMembraneBarostat(pressure, tension, temp, MonteCarloMembraneBarostat::XYAnisotropic, MonteCarloMembraneBarostat::ZFree, 1);
