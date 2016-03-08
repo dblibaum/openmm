@@ -38,7 +38,7 @@ void simulateArgon()
         system.addParticle(39.95); // mass of Ar, grams per mole
 
         // charge, L-J sigma (nm), well depth (kJ)
-        nonbond->addParticle(0.0, 0.3350, 0.996); // vdWRad(Ar)=.188 nm
+        nonbond->addParticle(0.0, 0.3350, 0.996, 0.0); // vdWRad(Ar)=.188 nm
     }
 
     OpenMM::VerletIntegrator integrator(0.004); // step size in ps

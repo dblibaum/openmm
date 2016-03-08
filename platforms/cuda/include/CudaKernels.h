@@ -35,6 +35,9 @@
 #include "CudaSort.h"
 #include "openmm/kernels.h"
 #include "openmm/System.h"
+#include "openmm/internal/CompiledExpressionSet.h"
+#include "openmm/internal/CustomIntegratorUtilities.h"
+#include "lepton/CompiledExpression.h"
 #include <cufft.h>
 
 namespace OpenMM {
@@ -588,7 +591,7 @@ private:
 class CudaCalcNonbondedForceKernel : public CalcNonbondedForceKernel {
 public:
     CudaCalcNonbondedForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) : CalcNonbondedForceKernel(name, platform),
-            cu(cu), hasInitializedFFT(false), sigmaEpsilon(NULL), exceptionParams(NULL), cosSinSums(NULL), directPmeGrid(NULL), reciprocalPmeGrid(NULL),
+            cu(cu), hasInitializedFFT(false), sigmaEpsilon(NULL), dGroup(NULL), exceptionParams(NULL), cosSinSums(NULL), directPmeGrid(NULL), reciprocalPmeGrid(NULL),
             pmeBsplineModuliX(NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL),  pmeAtomRange(NULL), pmeAtomGridIndex(NULL), pmeEnergyBuffer(NULL), sort(NULL), fft(NULL), pmeio(NULL) {
     }
     ~CudaCalcNonbondedForceKernel();
@@ -617,6 +620,15 @@ public:
      * @param force      the NonbondedForce to copy the parameters from
      */
     void copyParametersToContext(ContextImpl& context, const NonbondedForce& force);
+    /**
+     * Get the parameters being used for PME.
+     * 
+     * @param alpha   the separation parameter
+     * @param nx      the number of grid points along the X axis
+     * @param ny      the number of grid points along the Y axis
+     * @param nz      the number of grid points along the Z axis
+     */
+    void getPMEParameters(double& alpha, int& nx, int& ny, int& nz) const;
 private:
     class SortTrait : public CudaSort::SortTrait {
         int getDataSize() const {return 8;}
@@ -636,6 +648,7 @@ private:
     CudaContext& cu;
     bool hasInitializedFFT;
     CudaArray* sigmaEpsilon;
+    CudaArray* dGroup;
     CudaArray* exceptionParams;
     CudaArray* cosSinSums;
     CudaArray* directPmeGrid;
@@ -666,7 +679,10 @@ private:
     std::vector<std::pair<int, int> > exceptionAtoms;
     double ewaldSelfEnergy, dispersionCoefficient, alpha;
     int interpolateForceThreads;
+    int gridSizeX, gridSizeY, gridSizeZ;
     bool hasCoulomb, hasLJ, usePmeStream, useCudaFFT;
+    UseRest useRest;
+    NonbondedMethod nonbondedMethod;
     static const int PmeOrder = 5;
 };
 
@@ -753,7 +769,7 @@ public:
      */
     void copyParametersToContext(ContextImpl& context, const GBSAOBCForce& force);
 private:
-    double prefactor, surfaceAreaFactor;
+    double prefactor, surfaceAreaFactor, cutoff;
     bool hasCreatedKernels;
     int maxTiles;
     CudaContext& cu;
@@ -803,6 +819,7 @@ public:
      */
     void copyParametersToContext(ContextImpl& context, const CustomGBForce& force);
 private:
+    double cutoff;
     bool hasInitializedKernels, needParameterGradient;
     int maxTiles, numComputedValues;
     CudaContext& cu;
@@ -917,6 +934,58 @@ private:
     std::vector<void*> donorArgs, acceptorArgs;
     const System& system;
     CUfunction donorKernel, acceptorKernel;
+};
+
+/**
+ * This kernel is invoked by CustomCentroidBondForce to calculate the forces acting on the system.
+ */
+class CudaCalcCustomCentroidBondForceKernel : public CalcCustomCentroidBondForceKernel {
+public:
+    CudaCalcCustomCentroidBondForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) : CalcCustomCentroidBondForceKernel(name, platform),
+            cu(cu), params(NULL), globals(NULL), groupParticles(NULL), groupWeights(NULL), groupOffsets(NULL), groupForces(NULL), bondGroups(NULL), centerPositions(NULL), system(system) {
+    }
+    ~CudaCalcCustomCentroidBondForceKernel();
+    /**
+     * Initialize the kernel.
+     *
+     * @param system     the System this kernel will be applied to
+     * @param force      the CustomCentroidBondForce this kernel will be used for
+     */
+    void initialize(const System& system, const CustomCentroidBondForce& force);
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     *
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    double execute(ContextImpl& context, bool includeForces, bool includeEnergy);
+    /**
+     * Copy changed parameters over to a context.
+     *
+     * @param context    the context to copy parameters to
+     * @param force      the CustomCentroidBondForce to copy the parameters from
+     */
+    void copyParametersToContext(ContextImpl& context, const CustomCentroidBondForce& force);
+
+private:
+    int numGroups, numBonds;
+    CudaContext& cu;
+    CudaParameterSet* params;
+    CudaArray* globals;
+    CudaArray* groupParticles;
+    CudaArray* groupWeights;
+    CudaArray* groupOffsets;
+    CudaArray* groupForces;
+    CudaArray* bondGroups;
+    CudaArray* centerPositions;
+    std::vector<std::string> globalParamNames;
+    std::vector<float> globalParamValues;
+    std::vector<CudaArray*> tabulatedFunctions;
+    std::vector<void*> groupForcesArgs;
+    CUfunction computeCentersKernel, groupForcesKernel, applyForcesKernel;
+    const System& system;
 };
 
 /**
@@ -1057,7 +1126,6 @@ public:
     double computeKineticEnergy(ContextImpl& context, const VerletIntegrator& integrator);
 private:
     CudaContext& cu;
-    double prevStepSize;
     CUfunction kernel1, kernel2;
 };
 
@@ -1214,9 +1282,10 @@ private:
  */
 class CudaIntegrateCustomStepKernel : public IntegrateCustomStepKernel {
 public:
+    enum GlobalTargetType {DT, VARIABLE, PARAMETER};
     CudaIntegrateCustomStepKernel(std::string name, const Platform& platform, CudaContext& cu) : IntegrateCustomStepKernel(name, platform), cu(cu),
-            hasInitializedKernels(false), localValuesAreCurrent(false), globalValues(NULL), contextParameterValues(NULL), sumBuffer(NULL), potentialEnergy(NULL),
-            kineticEnergy(NULL), uniformRandoms(NULL), randomSeed(NULL), perDofValues(NULL) {
+            hasInitializedKernels(false), localValuesAreCurrent(false), globalValues(NULL), sumBuffer(NULL), summedValue(NULL), uniformRandoms(NULL),
+            randomSeed(NULL), perDofValues(NULL) {
     }
     ~CudaIntegrateCustomStepKernel();
     /**
@@ -1280,21 +1349,21 @@ public:
     void setPerDofVariable(ContextImpl& context, int variable, const std::vector<Vec3>& values);
 private:
     class ReorderListener;
-    std::string createGlobalComputation(const std::string& variable, const Lepton::ParsedExpression& expr, CustomIntegrator& integrator, const std::string& energyName);
+    class GlobalTarget;
     std::string createPerDofComputation(const std::string& variable, const Lepton::ParsedExpression& expr, int component, CustomIntegrator& integrator, const std::string& forceName, const std::string& energyName);
     void prepareForComputation(ContextImpl& context, CustomIntegrator& integrator, bool& forcesAreValid);
+    void recordGlobalValue(double value, GlobalTarget target);
     void recordChangedParameters(ContextImpl& context);
+    bool evaluateCondition(int step);
     CudaContext& cu;
-    double prevStepSize, energy;
+    double energy;
     float energyFloat;
     int numGlobalVariables;
-    bool hasInitializedKernels, deviceValuesAreCurrent, modifiesParameters, keNeedsForce;
+    bool hasInitializedKernels, deviceValuesAreCurrent, deviceGlobalsAreCurrent, modifiesParameters, keNeedsForce, hasAnyConstraints;
     mutable bool localValuesAreCurrent;
     CudaArray* globalValues;
-    CudaArray* contextParameterValues;
     CudaArray* sumBuffer;
-    CudaArray* potentialEnergy;
-    CudaArray* kineticEnergy;
+    CudaArray* summedValue;
     CudaArray* uniformRandoms;
     CudaArray* randomSeed;
     std::map<int, CudaArray*> savedForces;
@@ -1302,21 +1371,43 @@ private:
     CudaParameterSet* perDofValues;
     mutable std::vector<std::vector<float> > localPerDofValuesFloat;
     mutable std::vector<std::vector<double> > localPerDofValuesDouble;
-    std::vector<float> contextValuesFloat;
-    std::vector<double> contextValuesDouble;
+    std::vector<float> globalValuesFloat;
+    std::vector<double> globalValuesDouble;
+    std::vector<double> initialGlobalVariables;
     std::vector<std::vector<CUfunction> > kernels;
     std::vector<std::vector<std::vector<void*> > > kernelArgs;
     std::vector<void*> kineticEnergyArgs;
     CUfunction randomKernel, kineticEnergyKernel, sumKineticEnergyKernel;
     std::vector<CustomIntegrator::ComputationType> stepType;
+    std::vector<CustomIntegratorUtilities::Comparison> comparisons;
+    std::vector<std::vector<Lepton::CompiledExpression> > globalExpressions;
+    CompiledExpressionSet expressionSet;
+    std::vector<bool> needsGlobals;
     std::vector<bool> needsForces;
     std::vector<bool> needsEnergy;
+    std::vector<bool> computeBothForceAndEnergy;
     std::vector<bool> invalidatesForces;
     std::vector<bool> merged;
-    std::vector<int> forceGroup;
+    std::vector<int> forceGroupFlags;
+    std::vector<int> blockEnd;
     std::vector<int> requiredGaussian;
     std::vector<int> requiredUniform;
+    std::vector<int> stepEnergyVariableIndex;
+    std::vector<int> globalVariableIndex;
+    std::vector<int> parameterVariableIndex;
+    int gaussianVariableIndex, uniformVariableIndex, dtVariableIndex;
     std::vector<std::string> parameterNames;
+    std::vector<GlobalTarget> stepTarget;
+};
+
+class CudaIntegrateCustomStepKernel::GlobalTarget {
+public:
+    CudaIntegrateCustomStepKernel::GlobalTargetType type;
+    int variableIndex;
+    GlobalTarget() {
+    }
+    GlobalTarget(CudaIntegrateCustomStepKernel::GlobalTargetType type, int variableIndex) : type(type), variableIndex(variableIndex) {
+    }
 };
 
 /**

@@ -65,13 +65,13 @@ namespace OpenMM {
  * This class provides a convenience method for this case called createExceptionsFromBonds().  You pass to it
  * a list of bonds and the scale factors to use for 1-4 interactions.  It identifies all pairs of particles which
  * are separated by 1, 2, or 3 bonds, then automatically creates exceptions for them.
- * 
+ *
  * When using a cutoff, by default Lennard-Jones interactions are sharply truncated at the cutoff distance.
  * Optionally you can instead use a switching function to make the interaction smoothly go to zero over a finite
  * distance range.  To enable this, call setUseSwitchingFunction().  You must also call setSwitchingDistance()
  * to specify the distance at which the interaction should begin to decrease.  The switching distance must be
  * less than the cutoff distance.
- * 
+ *
  * Another optional feature of this class (enabled by default) is to add a contribution to the energy which approximates
  * the effect of all Lennard-Jones interactions beyond the cutoff in a periodic system.  When running a simulation
  * at constant pressure, this can improve the quality of the result.  Call setUseDispersionCorrection() to set whether
@@ -80,6 +80,19 @@ namespace OpenMM {
 
 class OPENMM_EXPORT NonbondedForce : public Force {
 public:
+    /**
+     * Switch for whether to use REST scaling. Using an enum to make it consistent with other force parameters.
+     */
+    enum UseRest {
+        /**
+         * No, don't do it.
+         */
+        No = 0,
+        /**
+         * Yes, I want REST!
+         */
+        Yes = 1
+    };
     /**
      * This is an enumeration of the different methods that may be used for handling long range nonbonded forces.
      */
@@ -128,6 +141,14 @@ public:
         return exceptions.size();
     }
     /**
+     * Get whether to use REST or not.
+     */
+    UseRest getUseRest() const;
+    /**
+     * Set whether to use REST or not.
+     */
+    void setUseRest(UseRest yesno);
+    /**
      * Get the method used for handling long range nonbonded interactions.
      */
     NonbondedMethod getNonbondedMethod() const;
@@ -135,6 +156,26 @@ public:
      * Set the method used for handling long range nonbonded interactions.
      */
     void setNonbondedMethod(NonbondedMethod method);
+	/**
+	* Get b0 for REST scaling.
+	*/
+	double getb0() const;
+	/**
+	* Set b0 for REST scaling.
+	*
+	* @param b0    the base energy
+	*/
+	void setb0(double energy);
+	/**
+	* Get bm for REST scaling.
+	*/
+	double getbm() const;
+	/**
+	* Set bm for REST scaling.
+	*
+	* @param bm    the scaled energy
+	*/
+	void setbm(double energy);
     /**
      * Get the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use
      * is NoCutoff, this value will have no effect.
@@ -182,7 +223,7 @@ public:
      * which is acceptable.  This value is used to select the reciprocal space cutoff and separation
      * parameter so that the average error level will be less than the tolerance.  There is not a
      * rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
-     * 
+     *
      * For PME calculations, if setPMEParameters() is used to set alpha to something other than 0,
      * this value is ignored.
      */
@@ -192,7 +233,7 @@ public:
      * which is acceptable.  This value is used to select the reciprocal space cutoff and separation
      * parameter so that the average error level will be less than the tolerance.  There is not a
      * rigorous guarantee that all forces on all atoms will be less than the tolerance, however.
-     * 
+     *
      * For PME calculations, if setPMEParameters() is used to set alpha to something other than 0,
      * this value is ignored.
      */
@@ -200,23 +241,36 @@ public:
     /**
      * Get the parameters to use for PME calculations.  If alpha is 0 (the default), these parameters are
      * ignored and instead their values are chosen based on the Ewald error tolerance.
-     * 
-     * @param alpha   the separation parameter
-     * @param nx      the number of grid points along the X axis
-     * @param ny      the number of grid points along the Y axis
-     * @param nz      the number of grid points along the Z axis
+     *
+     * @param[out] alpha   the separation parameter
+     * @param[out] nx      the number of grid points along the X axis
+     * @param[out] ny      the number of grid points along the Y axis
+     * @param[out] nz      the number of grid points along the Z axis
      */
     void getPMEParameters(double& alpha, int& nx, int& ny, int& nz) const;
     /**
      * Set the parameters to use for PME calculations.  If alpha is 0 (the default), these parameters are
      * ignored and instead their values are chosen based on the Ewald error tolerance.
-     * 
+     *
      * @param alpha   the separation parameter
      * @param nx      the number of grid points along the X axis
      * @param ny      the number of grid points along the Y axis
      * @param nz      the number of grid points along the Z axis
      */
     void setPMEParameters(double alpha, int nx, int ny, int nz);
+    /**
+     * Get the parameters being used for PME in a particular Context.  Because some platforms have restrictions
+     * on the allowed grid sizes, the values that are actually used may be slightly different from those
+     * specified with setPMEParameters(), or the standard values calculated based on the Ewald error tolerance.
+     * See the manual for details.
+     *
+     * @param context      the Context for which to get the parameters
+     * @param[out] alpha   the separation parameter
+     * @param[out] nx      the number of grid points along the X axis
+     * @param[out] ny      the number of grid points along the Y axis
+     * @param[out] nz      the number of grid points along the Z axis
+     */
+    void getPMEParametersInContext(const Context& context, double& alpha, int& nx, int& ny, int& nz) const;
     /**
      * Add the nonbonded force parameters for a particle.  This should be called once for each particle
      * in the System.  When it is called for the i'th time, it specifies the parameters for the i'th particle.
@@ -229,16 +283,17 @@ public:
      * @param epsilon   the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
      * @return the index of the particle that was added
      */
-    int addParticle(double charge, double sigma, double epsilon);
+    int addParticle(double charge, double sigma, double epsilon, float group);
     /**
      * Get the nonbonded force parameters for a particle.
      *
-     * @param index     the index of the particle for which to get parameters
-     * @param charge    the charge of the particle, measured in units of the proton charge
-     * @param sigma     the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
-     * @param epsilon   the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     * @param index          the index of the particle for which to get parameters
+     * @param[out] charge    the charge of the particle, measured in units of the proton charge
+     * @param[out] sigma     the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
+     * @param[out] epsilon   the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     * @param[out] group     the group parameter for determining REST scaling
      */
-    void getParticleParameters(int index, double& charge, double& sigma, double& epsilon) const;
+    void getParticleParameters(int index, double& charge, double& sigma, double& epsilon, float& group) const;
     /**
      * Set the nonbonded force parameters for a particle.  When calculating the Lennard-Jones interaction between two particles,
      * it uses the arithmetic mean of the sigmas and the geometric mean of the epsilons for the two interacting particles
@@ -248,8 +303,9 @@ public:
      * @param charge    the charge of the particle, measured in units of the proton charge
      * @param sigma     the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
      * @param epsilon   the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     * @param group     the group parameter for determining rest scaling
      */
-    void setParticleParameters(int index, double charge, double sigma, double epsilon);
+    void setParticleParameters(int index, double charge, double sigma, double epsilon, float group);
     /**
      * Add an interaction to the list of exceptions that should be calculated differently from other interactions.
      * If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from
@@ -266,31 +322,35 @@ public:
      *                   an exception is thrown.
      * @return the index of the exception that was added
      */
-    int addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, bool replace = false);
+    int addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group,
+                     bool replace = false);
     /**
      * Get the force field parameters for an interaction that should be calculated differently from others.
-     * 
-     * @param index      the index of the interaction for which to get parameters
-     * @param particle1  the index of the first particle involved in the interaction
-     * @param particle2  the index of the second particle involved in the interaction
-     * @param chargeProd the scaled product of the atomic charges (i.e. the strength of the Coulomb interaction), measured in units of the proton charge squared
-     * @param sigma      the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
-     * @param epsilon    the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     *
+     * @param index           the index of the interaction for which to get parameters
+     * @param[out] particle1  the index of the first particle involved in the interaction
+     * @param[out] particle2  the index of the second particle involved in the interaction
+     * @param[out] chargeProd the scaled product of the atomic charges (i.e. the strength of the Coulomb interaction), measured in units of the proton charge squared
+     * @param[out] sigma      the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
+     * @param[out] epsilon    the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     * @param group           the group parameter for determining rest scaling
      */
-    void getExceptionParameters(int index, int& particle1, int& particle2, double& chargeProd, double& sigma, double& epsilon) const;
+    void getExceptionParameters(int index, int& particle1, int& particle2, double& chargeProd, double& sigma, double& epsilon, float& group) const;
     /**
      * Set the force field parameters for an interaction that should be calculated differently from others.
      * If chargeProd and epsilon are both equal to 0, this will cause the interaction to be completely omitted from
      * force and energy calculations.
-     * 
+     *
      * @param index      the index of the interaction for which to get parameters
      * @param particle1  the index of the first particle involved in the interaction
      * @param particle2  the index of the second particle involved in the interaction
      * @param chargeProd the scaled product of the atomic charges (i.e. the strength of the Coulomb interaction), measured in units of the proton charge squared
      * @param sigma      the sigma parameter of the Lennard-Jones potential (corresponding to the van der Waals radius of the particle), measured in nm
      * @param epsilon    the epsilon parameter of the Lennard-Jones potential (corresponding to the well depth of the van der Waals interaction), measured in kJ/mol
+     * @param group      the group parameter for determining rest scaling
      */
-    void setExceptionParameters(int index, int particle1, int particle2, double chargeProd, double sigma, double epsilon);
+    void setExceptionParameters(int index, int particle1, int particle2, double chargeProd, double sigma, double epsilon,
+                                float group);
     /**
      * Identify exceptions based on the molecular topology.  Particles which are separated by one or two bonds are set
      * to not interact at all, while pairs of particles separated by three bonds (known as "1-4 interactions") have
@@ -334,7 +394,7 @@ public:
      * time step integrators to evaluate direct and reciprocal space interactions at different intervals: setForceGroup()
      * specifies the group for direct space, and setReciprocalSpaceForceGroup() specifies the group for reciprocal space.
      * If this is -1 (the default value), the same force group is used for reciprocal space as for direct space.
-     * 
+     *
      * @param group    the group index.  Legal values are between 0 and 31 (inclusive), or -1 to use the same force group
      *                 that is specified for direct space.
      */
@@ -344,7 +404,7 @@ public:
      * provides an efficient method to update certain parameters in an existing Context without needing to reinitialize it.
      * Simply call setParticleParameters() and setExceptionParameters() to modify this object's parameters, then call
      * updateParametersInContext() to copy them over to the Context.
-     * 
+     *
      * This method has several limitations.  The only information it updates is the parameters of particles and exceptions.
      * All other aspects of the Force (the nonbonded method, the cutoff distance, etc.) are unaffected and can only be
      * changed by reinitializing the Context.  Furthermore, only the chargeProd, sigma, and epsilon values of an exception
@@ -368,8 +428,9 @@ protected:
 private:
     class ParticleInfo;
     class ExceptionInfo;
+    UseRest useRest;
     NonbondedMethod nonbondedMethod;
-    double cutoffDistance, switchingDistance, rfDielectric, ewaldErrorTol, alpha;
+    double cutoffDistance, switchingDistance, rfDielectric, ewaldErrorTol, alpha, bm, b0;
     bool useSwitchingFunction, useDispersionCorrection;
     int recipForceGroup, nx, ny, nz;
     void addExclusionsToSet(const std::vector<std::set<int> >& bonded12, std::set<int>& exclusions, int baseParticle, int fromParticle, int currentLevel) const;
@@ -384,12 +445,14 @@ private:
  */
 class NonbondedForce::ParticleInfo {
 public:
-    double charge, sigma, epsilon;
+	double charge, sigma, epsilon; 
+	float group;
     ParticleInfo() {
         charge = sigma = epsilon = 0.0;
+		group = 0.0;
     }
-    ParticleInfo(double charge, double sigma, double epsilon) :
-        charge(charge), sigma(sigma), epsilon(epsilon) {
+    ParticleInfo(double charge, double sigma, double epsilon, float group) :
+        charge(charge), sigma(sigma), epsilon(epsilon), group(group) {
     }
 };
 
@@ -400,13 +463,15 @@ public:
 class NonbondedForce::ExceptionInfo {
 public:
     int particle1, particle2;
-    double chargeProd, sigma, epsilon;
+	double chargeProd, sigma, epsilon;
+	float group;
     ExceptionInfo() {
         particle1 = particle2 = -1;
         chargeProd = sigma = epsilon = 0.0;
+		group = 0.0;
     }
-    ExceptionInfo(int particle1, int particle2, double chargeProd, double sigma, double epsilon) :
-        particle1(particle1), particle2(particle2), chargeProd(chargeProd), sigma(sigma), epsilon(epsilon) {
+    ExceptionInfo(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group) :
+        particle1(particle1), particle2(particle2), chargeProd(chargeProd), sigma(sigma), epsilon(epsilon), group(group) {
     }
 };
 
