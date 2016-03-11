@@ -150,7 +150,7 @@ class AmberPrmtopFile(object):
                      implicitSolventKappa=None, temperature=298.15*unit.kelvin,
                      soluteDielectric=1.0, solventDielectric=78.5,
                      removeCMMotion=True, hydrogenMass=None, ewaldErrorTolerance=0.0005,
-					 particleGroupList=[], b0=1.0, bm=1.0, useRest='No'):
+		     particleGroupList=[], b0=1.0, bm=1.0, useRest='No'):
         """Construct an OpenMM System representing the topology described by this prmtop file.
 
         Parameters:
@@ -173,10 +173,10 @@ class AmberPrmtopFile(object):
          - hydrogenMass (mass=None) The mass to use for hydrogen atoms bound to heavy atoms.  Any mass added to a hydrogen is
            subtracted from the heavy atom to keep their total mass the same.
          - ewaldErrorTolerance (float=0.0005) The error tolerance to use if nonbondedMethod is Ewald or PME.
-		 - particleGroupList (list=[]) For REST, defines which group each particle blongs to by atom index.
-		 - b0 (float=1.0) b0 parameter for REST energy scaling.
-		 - bm (float=1.0) bm parameter for REST energy scaling.
-		 - useRest (string="No") Whether or not to use REST (Yes/No).
+	 - particleGroupList (list=[]) For REST, defines which group each particle blongs to by atom index.
+	 - b0 (float=1.0) b0 parameter for REST energy scaling.
+	 - bm (float=1.0) bm parameter for REST energy scaling.
+	 - useRest (string="No") Whether or not to use REST (Yes/No).
         Returns: the newly created System
         """
         if self._prmtop.chamber:
@@ -238,7 +238,7 @@ class AmberPrmtopFile(object):
                         flexibleConstraints=False, gbmodel=implicitString, soluteDielectric=soluteDielectric,
                         solventDielectric=solventDielectric, implicitSolventKappa=implicitSolventKappa,
                         rigidWater=rigidWater, elements=self.elements, particleGroupList=particleGroupList, b0=b0,
-						bm=bm, useRest=useRest)
+			bm=bm, useRest=useRest)
 
         if hydrogenMass is not None:
             for atom1, atom2 in self.topology.bonds():
