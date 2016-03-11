@@ -684,10 +684,10 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
       verbose (boolean) - if True, print out information on progress (default: False)
       flexibleConstraints (boolean) - if True, flexible bonds will be added in addition ot constrained bonds
       rigidWater (boolean=True) If true, water molecules will be fully rigid regardless of the value passed for the shake argument
-	  particleGroupList (List=[]) For REST, defines which group each particle belongs to by atom index
-	  b0 (float) - b0 parameter for REST
-	  bm (float) bm parameter for REST
-	  useRest (string) - Whether to use REST or not (Yes/No)
+      particleGroupList (List=[]) For REST, defines which group each particle belongs to by atom index
+      b0 (float) - b0 parameter for REST
+      bm (float) bm parameter for REST
+      useRest (string) - Whether to use REST or not (Yes/No)
 
     NOTES
 
@@ -870,14 +870,14 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
 	# Set REST parameters if useRest
 
 	if (useRest == 'Yes') || (useRest == 'yes'):
-		force.setUseRest(mm.NonbondedForce.Yes)
-		force.setb0(b0)
-		force.setbm(bm)
+	    force.setUseRest(mm.NonbondedForce.Yes)
+	    force.setb0(b0)
+	    force.setbm(bm)
 	elif (useRest == 'No') || (useRest == 'no'):
-		force.setUseRest(mm.NonbondedForce.No)
+	    force.setUseRest(mm.NonbondedForce.No)
 	else:
-		force.setUseRest(mm.NonbondedForce.No)
-		print "UseRest argument not understood, 'No' assumed."
+	    force.setUseRest(mm.NonbondedForce.No)
+	    print "UseRest argument not understood, 'No' assumed."
 
     # Add per-particle nonbonded parameters.
     sigmaScale = 2**(-1./6.) * 2.0
