@@ -660,7 +660,7 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
           implicitSolventKappa=0.0*(1/units.nanometer), nonbondedCutoff=None,
           nonbondedMethod='NoCutoff', scee=None, scnb=None, mm=None, verbose=False,
           EwaldErrorTolerance=None, flexibleConstraints=True, rigidWater=True, elements=None, particleGroupList=[], 
-		  b0=1.0, bm=1.0, useRest='No'):
+	  b0=1.0, bm=1.0, useRest='No'):
     """
     Create an OpenMM System from an Amber prmtop file.
 
@@ -869,11 +869,11 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
 
 	# Set REST parameters if useRest
 
-	if (useRest == 'Yes') || (useRest == 'yes'):
+	if (useRest == 'Yes') or (useRest == 'yes'):
 	    force.setUseRest(mm.NonbondedForce.Yes)
 	    force.setb0(b0)
 	    force.setbm(bm)
-	elif (useRest == 'No') || (useRest == 'no'):
+	elif (useRest == 'No') or (useRest == 'no'):
 	    force.setUseRest(mm.NonbondedForce.No)
 	else:
 	    force.setUseRest(mm.NonbondedForce.No)
