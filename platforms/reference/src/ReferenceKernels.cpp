@@ -829,7 +829,8 @@ void ReferenceCalcNonbondedForceKernel::initialize(const System& system, const N
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         exclusions[particle1].insert(particle2);
         exclusions[particle2].insert(particle1);
         if (chargeProd != 0.0 || epsilon != 0.0)
@@ -844,7 +845,8 @@ void ReferenceCalcNonbondedForceKernel::initialize(const System& system, const N
     particleParamArray = allocateRealArray(numParticles, 3);
     for (int i = 0; i < numParticles; ++i) {
         double charge, radius, depth;
-        force.getParticleParameters(i, charge, radius, depth);
+		float group;
+        force.getParticleParameters(i, charge, radius, depth, group);
         particleParamArray[i][0] = static_cast<RealOpenMM>(0.5*radius);
         particleParamArray[i][1] = static_cast<RealOpenMM>(2.0*sqrt(depth));
         particleParamArray[i][2] = static_cast<RealOpenMM>(charge);
@@ -853,7 +855,8 @@ void ReferenceCalcNonbondedForceKernel::initialize(const System& system, const N
     for (int i = 0; i < num14; ++i) {
         int particle1, particle2;
         double charge, radius, depth;
-        force.getExceptionParameters(nb14s[i], particle1, particle2, charge, radius, depth);
+		float group;
+        force.getExceptionParameters(nb14s[i], particle1, particle2, charge, radius, depth, group);
         bonded14IndexArray[i][0] = particle1;
         bonded14IndexArray[i][1] = particle2;
         bonded14ParamArray[i][0] = static_cast<RealOpenMM>(radius);
@@ -933,7 +936,8 @@ void ReferenceCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& con
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if (chargeProd != 0.0 || epsilon != 0.0)
             nb14s.push_back(i);
     }
@@ -944,7 +948,8 @@ void ReferenceCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& con
 
     for (int i = 0; i < numParticles; ++i) {
         double charge, radius, depth;
-        force.getParticleParameters(i, charge, radius, depth);
+		float group;
+        force.getParticleParameters(i, charge, radius, depth, group);
         particleParamArray[i][0] = static_cast<RealOpenMM>(0.5*radius);
         particleParamArray[i][1] = static_cast<RealOpenMM>(2.0*sqrt(depth));
         particleParamArray[i][2] = static_cast<RealOpenMM>(charge);
@@ -952,7 +957,8 @@ void ReferenceCalcNonbondedForceKernel::copyParametersToContext(ContextImpl& con
     for (int i = 0; i < num14; ++i) {
         int particle1, particle2;
         double charge, radius, depth;
-        force.getExceptionParameters(nb14s[i], particle1, particle2, charge, radius, depth);
+		float group;
+        force.getExceptionParameters(nb14s[i], particle1, particle2, charge, radius, depth, group);
         bonded14IndexArray[i][0] = particle1;
         bonded14IndexArray[i][1] = particle2;
         bonded14ParamArray[i][0] = static_cast<RealOpenMM>(radius);

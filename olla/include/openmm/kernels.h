@@ -38,7 +38,6 @@
 #include "openmm/CMMotionRemover.h"
 #include "openmm/CustomAngleForce.h"
 #include "openmm/CustomBondForce.h"
-#include "openmm/CustomCentroidBondForce.h"
 #include "openmm/CustomCompoundBondForce.h"
 #include "openmm/CustomExternalForce.h"
 #include "openmm/CustomGBForce.h"
@@ -48,6 +47,7 @@
 #include "openmm/CustomManyParticleForce.h"
 #include "openmm/CustomTorsionForce.h"
 #include "openmm/GBSAOBCForce.h"
+#include "openmm/GBVIForce.h"
 #include "openmm/HarmonicAngleForce.h"
 #include "openmm/HarmonicBondForce.h"
 #include "openmm/KernelImpl.h"
@@ -584,15 +584,6 @@ public:
      * @param force      the NonbondedForce to copy the parameters from
      */
     virtual void copyParametersToContext(ContextImpl& context, const NonbondedForce& force) = 0;
-    /**
-     * Get the parameters being used for PME.
-     * 
-     * @param alpha   the separation parameter
-     * @param nx      the number of grid points along the X axis
-     * @param ny      the number of grid points along the Y axis
-     * @param nz      the number of grid points along the Z axis
-     */
-    virtual void getPMEParameters(double& alpha, int& nx, int& ny, int& nz) const = 0;
 };
 
 /**
@@ -668,6 +659,35 @@ public:
      * @param force      the GBSAOBCForce to copy the parameters from
      */
     virtual void copyParametersToContext(ContextImpl& context, const GBSAOBCForce& force) = 0;
+};
+
+/**
+ * This kernel is invoked by GBVIForce to calculate the forces acting on the system and the energy of the system.
+ */
+class CalcGBVIForceKernel : public KernelImpl {
+public:
+    static std::string Name() {
+        return "CalcGBVIForce";
+    }
+    CalcGBVIForceKernel(std::string name, const Platform& platform) : KernelImpl(name, platform) {
+    }
+    /**
+     * Initialize the kernel.
+     * 
+     * @param system      the System this kernel will be applied to
+     * @param force       the GBVIForce this kernel will be used for
+     * @param scaledRadii scaled radii
+     */
+    virtual void initialize(const System& system, const GBVIForce& force, const std::vector<double>& scaledRadii) = 0;
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     *
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    virtual double execute(ContextImpl& context, bool includeForces, bool includeEnergy) = 0;
 };
 
 /**
@@ -783,41 +803,6 @@ public:
      * @param force      the CustomHbondForce to copy the parameters from
      */
     virtual void copyParametersToContext(ContextImpl& context, const CustomHbondForce& force) = 0;
-};
-
-/**
- * This kernel is invoked by CustomCentroidBondForce to calculate the forces acting on the system and the energy of the system.
- */
-class CalcCustomCentroidBondForceKernel : public KernelImpl {
-public:
-    static std::string Name() {
-        return "CalcCustomCentroidBondForce";
-    }
-    CalcCustomCentroidBondForceKernel(std::string name, const Platform& platform) : KernelImpl(name, platform) {
-    }
-    /**
-     * Initialize the kernel.
-     *
-     * @param system     the System this kernel will be applied to
-     * @param force      the CustomCentroidBondForce this kernel will be used for
-     */
-    virtual void initialize(const System& system, const CustomCentroidBondForce& force) = 0;
-    /**
-     * Execute the kernel to calculate the forces and/or energy.
-     *
-     * @param context        the context in which to execute this kernel
-     * @param includeForces  true if forces should be calculated
-     * @param includeEnergy  true if the energy should be calculated
-     * @return the potential energy due to the force
-     */
-    virtual double execute(ContextImpl& context, bool includeForces, bool includeEnergy) = 0;
-    /**
-     * Copy changed parameters over to a context.
-     *
-     * @param context    the context to copy parameters to
-     * @param force      the CustomCentroidBondForce to copy the parameters from
-     */
-    virtual void copyParametersToContext(ContextImpl& context, const CustomCentroidBondForce& force) = 0;
 };
 
 /**
@@ -1264,15 +1249,6 @@ public:
      * @return the potential energy due to the PME reciprocal space interactions
      */
     virtual double finishComputation(IO& io) = 0;
-    /**
-     * Get the parameters being used for PME.
-     * 
-     * @param alpha   the separation parameter
-     * @param nx      the number of grid points along the X axis
-     * @param ny      the number of grid points along the Y axis
-     * @param nz      the number of grid points along the Z axis
-     */
-    virtual void getPMEParameters(double& alpha, int& nx, int& ny, int& nz) const = 0;
 };
 
 /**

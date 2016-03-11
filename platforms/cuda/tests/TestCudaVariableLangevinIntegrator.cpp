@@ -103,7 +103,7 @@ void testTemperature() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     Context context(system, integrator, platform);
@@ -140,7 +140,7 @@ void testConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     for (int i = 0; i < numParticles-1; ++i)
         system.addConstraint(i, i+1, 1.0);
@@ -211,7 +211,7 @@ void testRandomSeed() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     vector<Vec3> positions(numParticles);
@@ -267,6 +267,7 @@ void testArgonBox() {
     const double epsilon = BOLTZ * temp; // L-J well depth for Ar
     const double sigma = 0.34;           // L-J size for Ar in nm
     const double density = 0.8;          // atoms / sigma^3
+	float group = 0.0;
     double cellSize = sigma / pow(density, 0.333);
     double boxSize = gridSize * cellSize;
     double cutoff = 2.0 * sigma;
@@ -284,7 +285,7 @@ void testArgonBox() {
         for (int j = 0; j < gridSize; j++) {
             for (int k = 0; k < gridSize; k++) {
                 system.addParticle(mass);
-                nonbonded->addParticle(0, sigma, epsilon);
+                nonbonded->addParticle(0, sigma, epsilon, group);
                 positions.push_back((Vec3(i, j, k) + half + Vec3(genrand_real2(sfmt), genrand_real2(sfmt), genrand_real2(sfmt))*0.1) * cellSize);
                 ++numParticles;
             }

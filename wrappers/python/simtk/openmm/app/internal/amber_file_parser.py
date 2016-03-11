@@ -659,7 +659,8 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
           soluteDielectric=1.0, solventDielectric=78.5,
           implicitSolventKappa=0.0*(1/units.nanometer), nonbondedCutoff=None,
           nonbondedMethod='NoCutoff', scee=None, scnb=None, mm=None, verbose=False,
-          EwaldErrorTolerance=None, flexibleConstraints=True, rigidWater=True, elements=None):
+          EwaldErrorTolerance=None, flexibleConstraints=True, rigidWater=True, elements=None, particleGroupList=[], 
+		  b0=1.0, bm=1.0, useRest='No'):
     """
     Create an OpenMM System from an Amber prmtop file.
 
@@ -683,6 +684,10 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
       verbose (boolean) - if True, print out information on progress (default: False)
       flexibleConstraints (boolean) - if True, flexible bonds will be added in addition ot constrained bonds
       rigidWater (boolean=True) If true, water molecules will be fully rigid regardless of the value passed for the shake argument
+	  particleGroupList (List=[]) For REST, defines which group each particle belongs to by atom index
+	  b0 (float) - b0 parameter for REST
+	  bm (float) bm parameter for REST
+	  useRest (string) - Whether to use REST or not (Yes/No)
 
     NOTES
 
@@ -862,6 +867,18 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
         if EwaldErrorTolerance is not None:
             force.setEwaldErrorTolerance(EwaldErrorTolerance)
 
+	# Set REST parameters if useRest
+
+	if (useRest == 'Yes') || (useRest == 'yes'):
+		force.setUseRest(mm.NonbondedForce.Yes)
+		force.setb0(b0)
+		force.setbm(bm)
+	elif (useRest == 'No') || (useRest == 'no'):
+		force.setUseRest(mm.NonbondedForce.No)
+	else:
+		force.setUseRest(mm.NonbondedForce.No)
+		print "UseRest argument not understood, 'No' assumed."
+
     # Add per-particle nonbonded parameters.
     sigmaScale = 2**(-1./6.) * 2.0
     nbfix = False
@@ -914,9 +931,9 @@ def readAmberSystem(topology, prmtop_filename=None, prmtop_loader=None, shake=No
         for atom in prmtop._getAtomTypeIndexes():
             cforce.addParticle((atom-1,))
     else:
-        for (charge, (rVdw, epsilon)) in zip(prmtop.getCharges(), nonbondTerms):
+        for (charge, (rVdw, epsilon), group) in zip(prmtop.getCharges(), nonbondTerms, particleGroupList):
             sigma = rVdw * sigmaScale
-            force.addParticle(charge, sigma, epsilon)
+            force.addParticle(charge, sigma, epsilon, group)
         if has_1264:
             numTypes = prmtop.getNumTypes()
             nbidx = [int(x) for x in prmtop._raw_data['NONBONDED_PARM_INDEX']]

@@ -712,7 +712,8 @@ void ValidateOpenMM::writeNonbondedForce( FILE* filePtr, const NonbondedForce & 
     (void) fprintf( filePtr, "NonbondedForce %d\n", nonbondedForce.getNumParticles() );
     for(int ii = 0; ii < nonbondedForce.getNumParticles(); ii++ ){
        double charge, sigma, epsilon;
-       nonbondedForce.getParticleParameters( ii, charge, sigma, epsilon );
+	   float group;
+       nonbondedForce.getParticleParameters( ii, charge, sigma, epsilon, group);
        (void) fprintf( filePtr, "%8d %14.7e %14.7e %14.7e\n", ii, charge, sigma, epsilon );
     }
 
@@ -750,7 +751,8 @@ void ValidateOpenMM::writeNonbondedForce( FILE* filePtr, const NonbondedForce & 
     for(int ii = 0; ii < nonbondedForce.getNumExceptions(); ii++ ){
        int particle1, particle2;
        double chargeProd, sigma, epsilon;
-       nonbondedForce.getExceptionParameters( ii, particle1, particle2, chargeProd, sigma, epsilon );
+	   float group;
+       nonbondedForce.getExceptionParameters( ii, particle1, particle2, chargeProd, sigma, epsilon, group);
        (void) fprintf( filePtr, "%8d %8d %8d %14.7e %14.7e %14.7e\n", ii, particle1, particle2, chargeProd, sigma, epsilon );
     }
 

@@ -17,7 +17,7 @@
     const real erfcAlphaR = (0.254829592f+(-0.284496736f+(1.421413741f+(-1.453152027f+1.061405429f*t)*t)*t)*t)*t*expAlphaRSqr;
 #endif
     real tempForce = 0.0f;
-    real alpha = 1.0f;
+	real alpha = 1.0f;
 #if USE_REST
     // Set scaling (alpha) based on bm/b0 and groups of interacting atoms.
     real bm = b0bm.x;

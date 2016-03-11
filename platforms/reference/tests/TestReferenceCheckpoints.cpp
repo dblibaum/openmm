@@ -83,7 +83,7 @@ void testCheckpoint() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(i%2 == 0 ? 0.1 : -0.1, 0.2, 0.1);
+		nonbonded->addParticle(i % 2 == 0 ? 0.1 : -0.1, 0.2, 0.1, 0.0);
         positions[i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
     }
     VerletIntegrator integrator(0.001);
@@ -136,7 +136,7 @@ void testSetState() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(i%2 == 0 ? 0.1 : -0.1, 0.2, 0.1);
+		nonbonded->addParticle(i % 2 == 0 ? 0.1 : -0.1, 0.2, 0.1, 0.0);
         positions[i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
     }
     VerletIntegrator integrator(0.001);

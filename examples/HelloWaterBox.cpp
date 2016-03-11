@@ -277,15 +277,15 @@ myInitializeOpenMM( int                 numWatersAlongEdge,
         nonbond.addParticle( // Oxygen
                 O_charge,
                 O_vdwRadInAng     * OpenMM::NmPerAngstrom * OpenMM::SigmaPerVdwRadius,
-                O_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
+				O_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
         nonbond.addParticle( // Hydrogen1
                 H_charge,
                 H_vdwRadInAng     * OpenMM::NmPerAngstrom * OpenMM::SigmaPerVdwRadius,
-                H_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
+				H_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
         nonbond.addParticle( // Hydrogen2
                 H_charge,
                 H_vdwRadInAng     * OpenMM::NmPerAngstrom * OpenMM::SigmaPerVdwRadius,
-                H_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
+				H_vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
         
         // Constrain O-H bond lengths or use harmonic forces.
         if (UseConstraints) {

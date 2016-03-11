@@ -69,9 +69,9 @@ void testEwaldExact() {
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(1.0, 1.0,0.0);
+		nonbonded->addParticle(1.0, 1.0, 0.0, 0.0);
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(-1.0, 1.0,0.0);
+		nonbonded->addParticle(-1.0, 1.0, 0.0, 0.0);
     nonbonded->setNonbondedMethod(NonbondedForce::Ewald);
     nonbonded->setCutoffDistance(cutoff);
     system.setDefaultPeriodicBoxVectors(Vec3(boxSize, 0, 0), Vec3(0, boxSize, 0), Vec3(0, 0, boxSize));
@@ -120,9 +120,9 @@ void testEwaldPME() {
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(1.0, 1.0,0.0);
+		nonbonded->addParticle(1.0, 1.0, 0.0, 0.0);
     for (int i = 0; i < numParticles/2; i++)
-        nonbonded->addParticle(-1.0, 1.0,0.0);
+		nonbonded->addParticle(-1.0, 1.0, 0.0, 0.0);
     nonbonded->setNonbondedMethod(NonbondedForce::Ewald);
     nonbonded->setCutoffDistance(cutoff);
     system.setDefaultPeriodicBoxVectors(Vec3(boxSize, 0, 0), Vec3(0, boxSize, 0), Vec3(0, 0, boxSize));
@@ -221,8 +221,8 @@ void testEwald2Ions() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
-    nonbonded->addParticle(1.0, 1, 0);
-    nonbonded->addParticle(-1.0, 1, 0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
+	nonbonded->addParticle(-1.0, 1, 0, 0.0);
     nonbonded->setNonbondedMethod(NonbondedForce::Ewald);
     const double cutoff = 2.0;
     nonbonded->setCutoffDistance(cutoff);
@@ -254,9 +254,9 @@ void testWaterSystem() {
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0 ; i < numParticles/3 ; i++)
     {
-      nonbonded->addParticle(-0.82, 1, 0);
-      nonbonded->addParticle(0.41, 1, 0);
-      nonbonded->addParticle(0.41, 1, 0);
+		nonbonded->addParticle(-0.82, 1, 0, 0.0);
+		nonbonded->addParticle(0.41, 1, 0, 0.0);
+		nonbonded->addParticle(0.41, 1, 0, 0.0);
     }
     nonbonded->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     const double cutoff = 0.8;
@@ -312,9 +312,9 @@ void testTriclinic() {
     force->setCutoffDistance(1.0);
     force->setPMEParameters(3.45891, 32, 40, 48);
     for (int i = 0; i < 4; i++)
-        force->addParticle(-1, 0.440104, 0.4184); // Cl parameters
+		force->addParticle(-1, 0.440104, 0.4184, 0.0); // Cl parameters
     for (int i = 0; i < 4; i++)
-        force->addParticle(1, 0.332840, 0.0115897); // Na parameters
+		force->addParticle(1, 0.332840, 0.0115897, 0.0); // Na parameters
     vector<Vec3> positions(8);
     positions[0] = Vec3(1.744, 2.788, 3.162);
     positions[1] = Vec3(1.048, 0.762, 2.340);
@@ -365,7 +365,7 @@ void testErrorTolerance(NonbondedForce::NonbondedMethod method) {
 
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        force->addParticle(-1.0+i*2.0/(numParticles-1), 1.0, 0.0);
+		force->addParticle(-1.0 + i*2.0 / (numParticles - 1), 1.0, 0.0, 0.0);
         positions[i] = Vec3(boxWidth*genrand_real2(sfmt), boxWidth*genrand_real2(sfmt), boxWidth*genrand_real2(sfmt));
     }
     force->setNonbondedMethod(method);
@@ -416,7 +416,7 @@ void testPMEParameters() {
 
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.0);
-        force->addParticle(-1.0+i*2.0/(numParticles-1), 1.0, 0.0);
+		force->addParticle(-1.0 + i*2.0 / (numParticles - 1), 1.0, 0.0, 0.0);
         positions[i] = Vec3(boxWidth*genrand_real2(sfmt), boxWidth*genrand_real2(sfmt), boxWidth*genrand_real2(sfmt));
     }
     force->setNonbondedMethod(NonbondedForce::PME);

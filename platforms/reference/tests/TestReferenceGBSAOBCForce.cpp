@@ -121,9 +121,9 @@ void testCutoffAndPeriodic() {
     GBSAOBCForce* gbsa = new GBSAOBCForce();
     NonbondedForce* nonbonded = new NonbondedForce();
     gbsa->addParticle(-1, 0.15, 1);
-    nonbonded->addParticle(-1, 1, 0);
+	nonbonded->addParticle(-1, 1, 0, 0.0);
     gbsa->addParticle(1, 0.15, 1);
-    nonbonded->addParticle(1, 1, 0);
+	nonbonded->addParticle(1, 1, 0, 0.0);
     const double cutoffDistance = 3.0;
     const double boxSize = 10.0;
     nonbonded->setCutoffDistance(cutoffDistance);

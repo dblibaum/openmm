@@ -52,11 +52,11 @@ NonbondedForce::NonbondedForce() : useRest(No), nonbondedMethod(NoCutoff), b0(1.
 }
 
 NonbondedForce::UseRest NonbondedForce::getUseRest() const {
-    return useRest;
+	return useRest;
 }
 
 void NonbondedForce::setUseRest(UseRest yesno) {
-    useRest = yesno;
+	useRest = yesno;
 }
 
 NonbondedForce::NonbondedMethod NonbondedForce::getNonbondedMethod() const {
@@ -137,74 +137,70 @@ void NonbondedForce::setPMEParameters(double alpha, int nx, int ny, int nz) {
     this->nz = nz;
 }
 
-void NonbondedForce::getPMEParametersInContext(const Context& context, double& alpha, int& nx, int& ny, int& nz) const {
-    dynamic_cast<const NonbondedForceImpl&>(getImplInContext(context)).getPMEParameters(alpha, nx, ny, nz);
-}
-
 int NonbondedForce::addParticle(double charge, double sigma, double epsilon, float group) {
-    particles.push_back(ParticleInfo(charge, sigma, epsilon, group));
-    return particles.size()-1;
+	particles.push_back(ParticleInfo(charge, sigma, epsilon, group));
+	return particles.size() - 1;
 }
 
 void NonbondedForce::getParticleParameters(int index, double& charge, double& sigma, double& epsilon, float& group) const {
-    ASSERT_VALID_INDEX(index, particles);
-    charge = particles[index].charge;
-    sigma = particles[index].sigma;
-    epsilon = particles[index].epsilon;
-    group = particles[index].group;
+	ASSERT_VALID_INDEX(index, particles);
+	charge = particles[index].charge;
+	sigma = particles[index].sigma;
+	epsilon = particles[index].epsilon;
+	group = particles[index].group;
 }
 
 void NonbondedForce::setParticleParameters(int index, double charge, double sigma, double epsilon, float group) {
-    ASSERT_VALID_INDEX(index, particles);
-    particles[index].charge = charge;
-    particles[index].sigma = sigma;
-    particles[index].epsilon = epsilon;
-    particles[index].group = group;
+	ASSERT_VALID_INDEX(index, particles);
+	particles[index].charge = charge;
+	particles[index].sigma = sigma;
+	particles[index].epsilon = epsilon;
+	particles[index].group = group;
 }
 
 int NonbondedForce::addException(int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group, bool replace) {
-    map<pair<int, int>, int>::iterator iter = exceptionMap.find(pair<int, int>(particle1, particle2));
-    int newIndex;
-    if (iter == exceptionMap.end())
-        iter = exceptionMap.find(pair<int, int>(particle2, particle1));
-    if (iter != exceptionMap.end()) {
-        if (!replace) {
-            stringstream msg;
-            msg << "NonbondedForce: There is already an exception for particles ";
-            msg << particle1;
-            msg << " and ";
-            msg << particle2;
-            throw OpenMMException(msg.str());
-        }
-        exceptions[iter->second] = ExceptionInfo(particle1, particle2, chargeProd, sigma, epsilon, group);
-        newIndex = iter->second;
-        exceptionMap.erase(iter->first);
-    }
-    else {
-        exceptions.push_back(ExceptionInfo(particle1, particle2, chargeProd, sigma, epsilon, group));
-        newIndex = exceptions.size()-1;
-    }
-    exceptionMap[pair<int, int>(particle1, particle2)] = newIndex;
-    return newIndex;
+	map<pair<int, int>, int>::iterator iter = exceptionMap.find(pair<int, int>(particle1, particle2));
+	int newIndex;
+	if (iter == exceptionMap.end())
+		iter = exceptionMap.find(pair<int, int>(particle2, particle1));
+	if (iter != exceptionMap.end()) {
+		if (!replace) {
+			stringstream msg;
+			msg << "NonbondedForce: There is already an exception for particles ";
+			msg << particle1;
+			msg << " and ";
+			msg << particle2;
+			throw OpenMMException(msg.str());
+		}
+		exceptions[iter->second] = ExceptionInfo(particle1, particle2, chargeProd, sigma, epsilon, group);
+		newIndex = iter->second;
+		exceptionMap.erase(iter->first);
+	}
+	else {
+		exceptions.push_back(ExceptionInfo(particle1, particle2, chargeProd, sigma, epsilon, group));
+		newIndex = exceptions.size() - 1;
+	}
+	exceptionMap[pair<int, int>(particle1, particle2)] = newIndex;
+	return newIndex;
 }
 void NonbondedForce::getExceptionParameters(int index, int& particle1, int& particle2, double& chargeProd, double& sigma, double& epsilon, float& group) const {
-    ASSERT_VALID_INDEX(index, exceptions);
-    particle1 = exceptions[index].particle1;
-    particle2 = exceptions[index].particle2;
-    chargeProd = exceptions[index].chargeProd;
-    sigma = exceptions[index].sigma;
-    epsilon = exceptions[index].epsilon;
-    group = exceptions[index].group;
+	ASSERT_VALID_INDEX(index, exceptions);
+	particle1 = exceptions[index].particle1;
+	particle2 = exceptions[index].particle2;
+	chargeProd = exceptions[index].chargeProd;
+	sigma = exceptions[index].sigma;
+	epsilon = exceptions[index].epsilon;
+	group = exceptions[index].group;
 }
 
 void NonbondedForce::setExceptionParameters(int index, int particle1, int particle2, double chargeProd, double sigma, double epsilon, float group) {
-    ASSERT_VALID_INDEX(index, exceptions);
-    exceptions[index].particle1 = particle1;
-    exceptions[index].particle2 = particle2;
-    exceptions[index].chargeProd = chargeProd;
-    exceptions[index].sigma = sigma;
-    exceptions[index].epsilon = epsilon;
-    exceptions[index].group = group;
+	ASSERT_VALID_INDEX(index, exceptions);
+	exceptions[index].particle1 = particle1;
+	exceptions[index].particle2 = particle2;
+	exceptions[index].chargeProd = chargeProd;
+	exceptions[index].sigma = sigma;
+	exceptions[index].epsilon = epsilon;
+	exceptions[index].group = group;
 }
 
 ForceImpl* NonbondedForce::createImpl() const {

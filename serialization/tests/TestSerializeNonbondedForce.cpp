@@ -44,20 +44,23 @@ void testSerialization() {
     NonbondedForce force;
     force.setForceGroup(3);
     force.setNonbondedMethod(NonbondedForce::CutoffPeriodic);
-    force.setSwitchingDistance(1.5);
+	force.setUseRest(NonbondedForce::No);
+	force.setSwitchingDistance(1.5);
     force.setUseSwitchingFunction(true);
     force.setCutoffDistance(2.0);
     force.setEwaldErrorTolerance(1e-3);
     force.setReactionFieldDielectric(50.0);
     force.setUseDispersionCorrection(false);
+	force.setb0(1.0);
+	force.setbm(1.0);
     double alpha = 0.5;
     int nx = 3, ny = 5, nz = 7;
     force.setPMEParameters(alpha, nx, ny, nz);
-    force.addParticle(1, 0.1, 0.01);
-    force.addParticle(0.5, 0.2, 0.02);
-    force.addParticle(-0.5, 0.3, 0.03);
-    force.addException(0, 1, 2, 0.5, 0.1);
-    force.addException(1, 2, 0.2, 0.4, 0.2);
+    force.addParticle(1, 0.1, 0.01, 0.0);
+	force.addParticle(0.5, 0.2, 0.02, 0.0);
+	force.addParticle(-0.5, 0.3, 0.03, 0.0);
+	force.addException(0, 1, 2, 0.5, 0.1, 0.0);
+	force.addException(1, 2, 0.2, 0.4, 0.2, 0.0);
 
     // Serialize and then deserialize it.
 
@@ -70,14 +73,17 @@ void testSerialization() {
     NonbondedForce& force2 = *copy;
     ASSERT_EQUAL(force.getForceGroup(), force2.getForceGroup());
     ASSERT_EQUAL(force.getNonbondedMethod(), force2.getNonbondedMethod());
-    ASSERT_EQUAL(force.getSwitchingDistance(), force2.getSwitchingDistance());
+	ASSERT_EQUAL(force.getUseRest(), force2.getUseRest());
+	ASSERT_EQUAL(force.getSwitchingDistance(), force2.getSwitchingDistance());
     ASSERT_EQUAL(force.getUseSwitchingFunction(), force2.getUseSwitchingFunction());
     ASSERT_EQUAL(force.getCutoffDistance(), force2.getCutoffDistance());
     ASSERT_EQUAL(force.getEwaldErrorTolerance(), force2.getEwaldErrorTolerance());
     ASSERT_EQUAL(force.getReactionFieldDielectric(), force2.getReactionFieldDielectric());
     ASSERT_EQUAL(force.getUseDispersionCorrection(), force2.getUseDispersionCorrection());
     ASSERT_EQUAL(force.getNumParticles(), force2.getNumParticles());
-    double alpha2;
+	ASSERT_EQUAL(force.getb0(), force2.getb0());
+	ASSERT_EQUAL(force.getbm(), force2.getbm());
+	double alpha2;
     int nx2, ny2, nz2;
     force2.getPMEParameters(alpha2, nx2, ny2, nz2);
     ASSERT_EQUAL(alpha, alpha2);
@@ -85,26 +91,30 @@ void testSerialization() {
     ASSERT_EQUAL(ny, ny2);
     ASSERT_EQUAL(nz, nz2);    
     for (int i = 0; i < force.getNumParticles(); i++) {
-        double charge1, sigma1, epsilon1;
+		double charge1, sigma1, epsilon1;
         double charge2, sigma2, epsilon2;
-        force.getParticleParameters(i, charge1, sigma1, epsilon1);
-        force2.getParticleParameters(i, charge2, sigma2, epsilon2);
+		float group1, group2;
+        force.getParticleParameters(i, charge1, sigma1, epsilon1, group1);
+        force2.getParticleParameters(i, charge2, sigma2, epsilon2, group2);
         ASSERT_EQUAL(charge1, charge2);
         ASSERT_EQUAL(sigma1, sigma2);
         ASSERT_EQUAL(epsilon1, epsilon2);
-    }
+		ASSERT_EQUAL(group1, group2);
+	}
     ASSERT_EQUAL(force.getNumExceptions(), force2.getNumExceptions());
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int a1, a2, b1, b2;
         double charge1, sigma1, epsilon1;
         double charge2, sigma2, epsilon2;
-        force.getExceptionParameters(i, a1, b1, charge1, sigma1, epsilon1);
-        force2.getExceptionParameters(i, a2, b2, charge2, sigma2, epsilon2);
+		float group1, group2;
+		force.getExceptionParameters(i, a1, b1, charge1, sigma1, epsilon1, group1);
+        force2.getExceptionParameters(i, a2, b2, charge2, sigma2, epsilon2, group2);
         ASSERT_EQUAL(a1, a2);
         ASSERT_EQUAL(b1, b2);
         ASSERT_EQUAL(charge1, charge2);
         ASSERT_EQUAL(sigma1, sigma2);
         ASSERT_EQUAL(epsilon1, epsilon2);
+		ASSERT_EQUAL(group1, group2);
     }
 }
 

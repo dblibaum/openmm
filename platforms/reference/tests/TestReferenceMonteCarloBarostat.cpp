@@ -58,7 +58,7 @@ void testChangingBoxSize() {
     NonbondedForce* nb = new NonbondedForce();
     nb->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     nb->setCutoffDistance(2.0);
-    nb->addParticle(1, 0.5, 0.5);
+	nb->addParticle(1, 0.5, 0.5, 0.0);
     system.addForce(nb);
     LangevinIntegrator integrator(300.0, 1.0, 0.01);
     Context context(system, integrator, platform);
@@ -155,7 +155,7 @@ void testRandomSeed() {
     forceField->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     MonteCarloBarostat* barostat = new MonteCarloBarostat(pressure, temp, 1);

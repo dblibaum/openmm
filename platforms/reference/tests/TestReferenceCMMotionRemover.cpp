@@ -73,7 +73,7 @@ void testMotionRemoval() {
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i+1);
-        nonbonded->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		nonbonded->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(nonbonded);
     CMMotionRemover* remover = new CMMotionRemover();

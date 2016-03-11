@@ -58,8 +58,8 @@ void testCoulomb() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* forceField = new NonbondedForce();
-    forceField->addParticle(0.5, 1, 0);
-    forceField->addParticle(-1.5, 1, 0);
+	forceField->addParticle(0.5, 1, 0, 0.0);
+	forceField->addParticle(-1.5, 1, 0, 0.0);
     system.addForce(forceField);
     ASSERT(!forceField->usesPeriodicBoundaryConditions());
     ASSERT(!system.usesPeriodicBoundaryConditions());
@@ -82,8 +82,8 @@ void testLJ() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* forceField = new NonbondedForce();
-    forceField->addParticle(0, 1.2, 1);
-    forceField->addParticle(0, 1.4, 2);
+	forceField->addParticle(0, 1.2, 1, 0.0);
+	forceField->addParticle(0, 1.4, 2, 0.0);
     system.addForce(forceField);
     ASSERT(!forceField->usesPeriodicBoundaryConditions());
     ASSERT(!system.usesPeriodicBoundaryConditions());
@@ -108,7 +108,7 @@ void testExclusionsAnd14() {
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0; i < 5; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(0, 1.5, 0);
+		nonbonded->addParticle(0, 1.5, 0, 0.0);
     }
     vector<pair<int, int> > bonds;
     bonds.push_back(pair<int, int>(0, 1));
@@ -120,7 +120,8 @@ void testExclusionsAnd14() {
     for (int i = 0; i < nonbonded->getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        nonbonded->getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        nonbonded->getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if ((particle1 == 0 && particle2 == 3) || (particle1 == 3 && particle2 == 0))
             first14 = i;
         if ((particle1 == 1 && particle2 == 4) || (particle1 == 4 && particle2 == 1))
@@ -135,13 +136,13 @@ void testExclusionsAnd14() {
         vector<Vec3> positions(5);
         const double r = 1.0;
         for (int j = 0; j < 5; ++j) {
-            nonbonded->setParticleParameters(j, 0, 1.5, 0);
+			nonbonded->setParticleParameters(j, 0, 1.5, 0, 0.0);
             positions[j] = Vec3(0, j, 0);
         }
-        nonbonded->setParticleParameters(0, 0, 1.5, 1);
-        nonbonded->setParticleParameters(i, 0, 1.5, 1);
-        nonbonded->setExceptionParameters(first14, 0, 3, 0, 1.5, i == 3 ? 0.5 : 0.0);
-        nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0.0);
+		nonbonded->setParticleParameters(0, 0, 1.5, 1, 0.0);
+		nonbonded->setParticleParameters(i, 0, 1.5, 1, 0.0);
+		nonbonded->setExceptionParameters(first14, 0, 3, 0, 1.5, i == 3 ? 0.5 : 0.0, 0.0);
+		nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0.0, 0.0);
         positions[i] = Vec3(r, 0, 0);
         context.reinitialize();
         context.setPositions(positions);
@@ -165,10 +166,10 @@ void testExclusionsAnd14() {
 
         // Test Coulomb forces
         
-        nonbonded->setParticleParameters(0, 2, 1.5, 0);
-        nonbonded->setParticleParameters(i, 2, 1.5, 0);
-        nonbonded->setExceptionParameters(first14, 0, 3, i == 3 ? 4/1.2 : 0, 1.5, 0);
-        nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0);
+		nonbonded->setParticleParameters(0, 2, 1.5, 0, 0.0);
+		nonbonded->setParticleParameters(i, 2, 1.5, 0, 0.0);
+		nonbonded->setExceptionParameters(first14, 0, 3, i == 3 ? 4 / 1.2 : 0, 1.5, 0, 0.0);
+		nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0, 0.0);
         nonbonded->updateParametersInContext(context);
         state = context.getState(State::Forces | State::Energy);
         const vector<Vec3>& forces2 = state.getForces();
@@ -195,9 +196,9 @@ void testCutoff() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* forceField = new NonbondedForce();
-    forceField->addParticle(1.0, 1, 0);
-    forceField->addParticle(1.0, 1, 0);
-    forceField->addParticle(1.0, 1, 0);
+	forceField->addParticle(1.0, 1, 0, 0.0);
+	forceField->addParticle(1.0, 1, 0, 0.0);
+	forceField->addParticle(1.0, 1, 0, 0.0);
     forceField->setNonbondedMethod(NonbondedForce::CutoffNonPeriodic);
     const double cutoff = 2.9;
     forceField->setCutoffDistance(cutoff);
@@ -232,7 +233,7 @@ void testCutoff14() {
     NonbondedForce* nonbonded = new NonbondedForce();
     for (int i = 0; i < 5; i++) {
         system.addParticle(1.0);
-        nonbonded->addParticle(0, 1.5, 0);
+		nonbonded->addParticle(0, 1.5, 0, 0.0);
     }
     nonbonded->setNonbondedMethod(NonbondedForce::CutoffNonPeriodic);
     const double cutoff = 3.5;
@@ -249,7 +250,8 @@ void testCutoff14() {
     for (int i = 0; i < nonbonded->getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        nonbonded->getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
+		float group;
+        nonbonded->getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
         if ((particle1 == 0 && particle2 == 3) || (particle1 == 3 && particle2 == 0))
             first14 = i;
         if ((particle1 == 1 && particle2 == 4) || (particle1 == 4 && particle2 == 1))
@@ -269,12 +271,12 @@ void testCutoff14() {
  
         // Test LJ forces
         
-        nonbonded->setParticleParameters(0, 0, 1.5, 1);
+		nonbonded->setParticleParameters(0, 0, 1.5, 1, 0.0);
         for (int j = 1; j < 5; ++j)
-            nonbonded->setParticleParameters(j, 0, 1.5, 0);
-        nonbonded->setParticleParameters(i, 0, 1.5, 1);
-        nonbonded->setExceptionParameters(first14, 0, 3, 0, 1.5, i == 3 ? 0.5 : 0.0);
-        nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0.0);
+			nonbonded->setParticleParameters(j, 0, 1.5, 0, 0.0);
+		nonbonded->setParticleParameters(i, 0, 1.5, 1, 0.0);
+		nonbonded->setExceptionParameters(first14, 0, 3, 0, 1.5, i == 3 ? 0.5 : 0.0, 0.0);
+		nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0.0, 0.0);
         context.reinitialize();
         context.setPositions(positions);
         State state = context.getState(State::Forces | State::Energy);
@@ -299,10 +301,10 @@ void testCutoff14() {
         // Test Coulomb forces
         
         const double q = 0.7;
-        nonbonded->setParticleParameters(0, q, 1.5, 0);
-        nonbonded->setParticleParameters(i, q, 1.5, 0);
-        nonbonded->setExceptionParameters(first14, 0, 3, i == 3 ? q*q/1.2 : 0, 1.5, 0);
-        nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0);
+		nonbonded->setParticleParameters(0, q, 1.5, 0, 0.0);
+		nonbonded->setParticleParameters(i, q, 1.5, 0, 0.0);
+		nonbonded->setExceptionParameters(first14, 0, 3, i == 3 ? q*q / 1.2 : 0, 1.5, 0, 0.0);
+		nonbonded->setExceptionParameters(second14, 1, 4, 0, 1.5, 0, 0.0);
         nonbonded->updateParametersInContext(context);
         state = context.getState(State::Forces | State::Energy);
         const vector<Vec3>& forces2 = state.getForces();
@@ -329,10 +331,10 @@ void testPeriodic() {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
-    nonbonded->addParticle(1.0, 1, 0);
-    nonbonded->addParticle(1.0, 1, 0);
-    nonbonded->addParticle(1.0, 1, 0);
-    nonbonded->addException(0, 1, 0.0, 1.0, 0.0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
+	nonbonded->addException(0, 1, 0.0, 1.0, 0.0, 0.0);
     nonbonded->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     const double cutoff = 2.0;
     nonbonded->setCutoffDistance(cutoff);
@@ -368,8 +370,8 @@ void testTriclinic() {
     system.setDefaultPeriodicBoxVectors(a, b, c);
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
-    nonbonded->addParticle(1.0, 1, 0);
-    nonbonded->addParticle(1.0, 1, 0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
+	nonbonded->addParticle(1.0, 1, 0, 0.0);
     nonbonded->setNonbondedMethod(NonbondedForce::CutoffPeriodic);
     const double cutoff = 1.5;
     nonbonded->setCutoffDistance(cutoff);
@@ -436,7 +438,7 @@ void testDispersionCorrection() {
         for (int j = 0; j < gridSize; j++)
             for (int k = 0; k < gridSize; k++) {
                 system.addParticle(1.0);
-                nonbonded->addParticle(0, 1.1, 0.5);
+				nonbonded->addParticle(0, 1.1, 0.5, 0.0);
                 positions[index] = Vec3(i*boxSize/gridSize, j*boxSize/gridSize, k*boxSize/gridSize);
                 index++;
             }
@@ -465,7 +467,7 @@ void testDispersionCorrection() {
 
     int numType2 = 0;
     for (int i = 0; i < numParticles; i += 2) {
-        nonbonded->setParticleParameters(i, 0, 1, 1);
+		nonbonded->setParticleParameters(i, 0, 1, 1, 0.0);
         numType2++;
     }
     int numType1 = numParticles-numType2;
@@ -496,8 +498,8 @@ void testSwitchingFunction(NonbondedForce::NonbondedMethod method) {
     system.addParticle(1.0);
     VerletIntegrator integrator(0.01);
     NonbondedForce* nonbonded = new NonbondedForce();
-    nonbonded->addParticle(0, 1.2, 1);
-    nonbonded->addParticle(0, 1.4, 2);
+	nonbonded->addParticle(0, 1.2, 1, 0.0);
+	nonbonded->addParticle(0, 1.4, 2, 0.0);
     nonbonded->setNonbondedMethod(method);
     nonbonded->setCutoffDistance(2.0);
     nonbonded->setUseSwitchingFunction(true);

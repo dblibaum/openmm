@@ -96,7 +96,7 @@ void testConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i%2 == 0 ? 5.0 : 10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     for (int i = 0; i < numParticles-1; ++i)
         system.addConstraint(i, i+1, 1.0);
@@ -154,7 +154,7 @@ void testConstrainedClusters() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i > 1 ? 1.0 : 10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     system.addConstraint(0, 1, 1.0);
     system.addConstraint(0, 2, 1.0);
@@ -263,7 +263,7 @@ void testArgonBox() {
         for (int j = 0; j < gridSize; j++) {
             for (int k = 0; k < gridSize; k++) {
                 system.addParticle(mass);
-                nonbonded->addParticle(0, sigma, epsilon);
+				nonbonded->addParticle(0, sigma, epsilon, 0.0);
                 positions.push_back((Vec3(i, j, k) + half + Vec3(genrand_real2(sfmt), genrand_real2(sfmt), genrand_real2(sfmt))*0.1) * cellSize);
             }
         }

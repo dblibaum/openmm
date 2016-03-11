@@ -46,12 +46,15 @@ void NonbondedForceProxy::serialize(const void* object, SerializationNode& node)
     const NonbondedForce& force = *reinterpret_cast<const NonbondedForce*>(object);
     node.setIntProperty("forceGroup", force.getForceGroup());
     node.setIntProperty("method", (int) force.getNonbondedMethod());
+	node.setIntProperty("useRest", (int) force.getUseRest());
     node.setDoubleProperty("cutoff", force.getCutoffDistance());
     node.setBoolProperty("useSwitchingFunction", force.getUseSwitchingFunction());
     node.setDoubleProperty("switchingDistance", force.getSwitchingDistance());
     node.setDoubleProperty("ewaldTolerance", force.getEwaldErrorTolerance());
     node.setDoubleProperty("rfDielectric", force.getReactionFieldDielectric());
-    node.setIntProperty("dispersionCorrection", force.getUseDispersionCorrection());
+	node.setDoubleProperty("b0", (double) force.getb0());
+	node.setDoubleProperty("bm", (double) force.getbm());
+	node.setIntProperty("dispersionCorrection", force.getUseDispersionCorrection());
     double alpha;
     int nx, ny, nz;
     force.getPMEParameters(alpha, nx, ny, nz);
@@ -63,15 +66,17 @@ void NonbondedForceProxy::serialize(const void* object, SerializationNode& node)
     SerializationNode& particles = node.createChildNode("Particles");
     for (int i = 0; i < force.getNumParticles(); i++) {
         double charge, sigma, epsilon;
-        force.getParticleParameters(i, charge, sigma, epsilon);
-        particles.createChildNode("Particle").setDoubleProperty("q", charge).setDoubleProperty("sig", sigma).setDoubleProperty("eps", epsilon);
+		float group;
+        force.getParticleParameters(i, charge, sigma, epsilon, group);
+        particles.createChildNode("Particle").setDoubleProperty("q", charge).setDoubleProperty("sig", sigma).setDoubleProperty("eps", epsilon).setDoubleProperty("grp", (double) group);
     }
     SerializationNode& exceptions = node.createChildNode("Exceptions");
     for (int i = 0; i < force.getNumExceptions(); i++) {
         int particle1, particle2;
         double chargeProd, sigma, epsilon;
-        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon);
-        exceptions.createChildNode("Exception").setIntProperty("p1", particle1).setIntProperty("p2", particle2).setDoubleProperty("q", chargeProd).setDoubleProperty("sig", sigma).setDoubleProperty("eps", epsilon);
+		float group;
+        force.getExceptionParameters(i, particle1, particle2, chargeProd, sigma, epsilon, group);
+		exceptions.createChildNode("Exception").setIntProperty("p1", particle1).setIntProperty("p2", particle2).setDoubleProperty("q", chargeProd).setDoubleProperty("sig", sigma).setDoubleProperty("eps", epsilon).setDoubleProperty("grp", (double) group);
     }
 }
 
@@ -82,12 +87,16 @@ void* NonbondedForceProxy::deserialize(const SerializationNode& node) const {
     try {
         force->setForceGroup(node.getIntProperty("forceGroup", 0));
         force->setNonbondedMethod((NonbondedForce::NonbondedMethod) node.getIntProperty("method"));
-        force->setCutoffDistance(node.getDoubleProperty("cutoff"));
+		force->setUseRest((NonbondedForce::UseRest) node.getIntProperty("useRest"));
+		force->setCutoffDistance(node.getDoubleProperty("cutoff"));
         force->setUseSwitchingFunction(node.getBoolProperty("useSwitchingFunction", false));
         force->setSwitchingDistance(node.getDoubleProperty("switchingDistance", -1.0));
         force->setEwaldErrorTolerance(node.getDoubleProperty("ewaldTolerance"));
         force->setReactionFieldDielectric(node.getDoubleProperty("rfDielectric"));
         force->setUseDispersionCorrection(node.getIntProperty("dispersionCorrection"));
+		force->setb0((float) node.getDoubleProperty("b0"));
+		force->setbm((float) node.getDoubleProperty("bm"));
+
         double alpha = node.getDoubleProperty("alpha", 0.0);
         int nx = node.getIntProperty("nx", 0);
         int ny = node.getIntProperty("ny", 0);
@@ -97,12 +106,12 @@ void* NonbondedForceProxy::deserialize(const SerializationNode& node) const {
         const SerializationNode& particles = node.getChildNode("Particles");
         for (int i = 0; i < (int) particles.getChildren().size(); i++) {
             const SerializationNode& particle = particles.getChildren()[i];
-            force->addParticle(particle.getDoubleProperty("q"), particle.getDoubleProperty("sig"), particle.getDoubleProperty("eps"));
+			force->addParticle(particle.getDoubleProperty("q"), particle.getDoubleProperty("sig"), particle.getDoubleProperty("eps"), particle.getDoubleProperty("grp"));
         }
         const SerializationNode& exceptions = node.getChildNode("Exceptions");
         for (int i = 0; i < (int) exceptions.getChildren().size(); i++) {
             const SerializationNode& exception = exceptions.getChildren()[i];
-            force->addException(exception.getIntProperty("p1"), exception.getIntProperty("p2"), exception.getDoubleProperty("q"), exception.getDoubleProperty("sig"), exception.getDoubleProperty("eps"));
+            force->addException(exception.getIntProperty("p1"), exception.getIntProperty("p2"), exception.getDoubleProperty("q"), exception.getDoubleProperty("sig"), exception.getDoubleProperty("eps"), exception.getDoubleProperty("grp"));
         }
     }
     catch (...) {

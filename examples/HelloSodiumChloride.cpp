@@ -231,7 +231,7 @@ myInitializeOpenMM( const MyAtomInfo    atoms[],
         nonbond->addParticle(atom.charge,
                              atom.vdwRadiusInAng  * OpenMM::NmPerAngstrom 
                                                   * OpenMM::SigmaPerVdwRadius,
-                             atom.vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
+												  atom.vdwEnergyInKcal * OpenMM::KJPerKcal, 0.0);
 
         gbsa->addParticle(atom.charge, 
                           atom.gbsaRadiusInAng * OpenMM::NmPerAngstrom,

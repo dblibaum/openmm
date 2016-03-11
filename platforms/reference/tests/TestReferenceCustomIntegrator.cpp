@@ -114,7 +114,7 @@ void testConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i%2 == 0 ? 5.0 : 10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     for (int i = 0; i < numParticles-1; ++i)
         system.addConstraint(i, i+1, 1.0);
@@ -173,7 +173,7 @@ void testVelocityConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i%2 == 0 ? 5.0 : 10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     
     // Constrain the first three particles with SHAKE.
@@ -288,7 +288,7 @@ void testWithThermostat() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     AndersenThermostat* thermostat = new AndersenThermostat(temp, collisionFreq);
@@ -384,7 +384,7 @@ void testSum() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(i%10 == 0 ? 0.0 : 1.5);
-        nb->addParticle(i%2 == 0 ? 0.1 : -0.1, 0.1, 1);
+		nb->addParticle(i % 2 == 0 ? 0.1 : -0.1, 0.1, 1, 0.0);
         bool close = true;
         while (close) {
             positions[i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
@@ -519,7 +519,7 @@ void testPerDofVariables() {
     init_gen_rand(0, sfmt);
     for (int i = 0; i < numParticles; i++) {
         system.addParticle(1.5);
-        nb->addParticle(i%2 == 0 ? 1 : -1, 0.1, 1);
+		nb->addParticle(i % 2 == 0 ? 1 : -1, 0.1, 1, 0.0);
         bool close = true;
         while (close) {
             positions[i] = Vec3(boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt), boxSize*genrand_real2(sfmt));
@@ -584,8 +584,8 @@ void testForceGroups() {
     bonds->setForceGroup(1);
     system.addForce(bonds);
     NonbondedForce* nb = new NonbondedForce();
-    nb->addParticle(0.2, 1, 0);
-    nb->addParticle(0.2, 1, 0);
+	nb->addParticle(0.2, 1, 0, 0.0);
+	nb->addParticle(0.2, 1, 0, 0.0);
     nb->setForceGroup(2);
     system.addForce(nb);
     Context context(system, integrator, platform);
@@ -657,7 +657,7 @@ void testRespa() {
     nb->setNonbondedMethod(NonbondedForce::Ewald);
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(i%2 == 0 ? 5.0 : 10.0);
-        nb->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		nb->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     nb->setForceGroup(1);
     nb->setReciprocalSpaceForceGroup(0);

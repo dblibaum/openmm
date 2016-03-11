@@ -142,14 +142,14 @@ void testEnergyEthane(int applyBornRadiiScaling) {
     for (int i = 0; i < numParticles; i++) {
        system.addParticle(1.0);
        forceField->addParticle(H_charge, H_radius, H_gamma);
-       nonbonded->addParticle( H_charge, H_radius, 0.0);
+	   nonbonded->addParticle(H_charge, H_radius, 0.0, 0.0);
     }
  
     forceField->setParticleParameters(1, C_charge, C_radius, C_gamma);
     forceField->setParticleParameters(4, C_charge, C_radius, C_gamma);
  
-    nonbonded->setParticleParameters( 1, C_charge, C_radius, 0.0);
-    nonbonded->setParticleParameters( 4, C_charge, C_radius, 0.0);
+	nonbonded->setParticleParameters(1, C_charge, C_radius, 0.0, 0.0);
+	nonbonded->setParticleParameters(4, C_charge, C_radius, 0.0, 0.0);
  
     forceField->addBond(0, 1, C_HBondDistance);
     forceField->addBond(2, 1, C_HBondDistance);

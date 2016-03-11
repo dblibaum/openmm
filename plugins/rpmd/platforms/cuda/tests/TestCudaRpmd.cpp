@@ -302,12 +302,12 @@ void testVirtualSites() {
         system.addParticle(1.0);
         system.addParticle(1.0);
         system.addParticle(0.0);
-        nonbonded->addParticle(-0.2, 0.2, 0.2);
-        nonbonded->addParticle(0.1, 0.2, 0.2);
-        nonbonded->addParticle(0.1, 0.2, 0.2);
-        nonbonded->addException(3*i, 3*i+1, 0, 1, 0);
-        nonbonded->addException(3*i, 3*i+2, 0, 1, 0);
-        nonbonded->addException(3*i+1, 3*i+2, 0, 1, 0);
+		nonbonded->addParticle(-0.2, 0.2, 0.2, 0.0);
+		nonbonded->addParticle(0.1, 0.2, 0.2, 0.0);
+		nonbonded->addParticle(0.1, 0.2, 0.2, 0.0);
+		nonbonded->addException(3 * i, 3 * i + 1, 0, 1, 0, 0.0);
+		nonbonded->addException(3 * i, 3 * i + 2, 0, 1, 0, 0.0);
+		nonbonded->addException(3 * i + 1, 3 * i + 2, 0, 1, 0, 0.0);
         bonds->addBond(3*i, 3*i+1, 1.0, 10000.0);
         system.setVirtualSite(3*i+2, new TwoParticleAverageSite(3*i, 3*i+1, 0.5, 0.5));
     }
@@ -384,9 +384,9 @@ void testContractions() {
     for (int i = 0; i < numMolecules; i++) {
         system.addParticle(1.0);
         system.addParticle(1.0);
-        nonbonded->addParticle(-0.2, 0.2, 0.2);
-        nonbonded->addParticle(0.2, 0.2, 0.2);
-        nonbonded->addException(2*i, 2*i+1, 0, 1, 0);
+		nonbonded->addParticle(-0.2, 0.2, 0.2, 0.0);
+		nonbonded->addParticle(0.2, 0.2, 0.2, 0.0);
+		nonbonded->addException(2 * i, 2 * i + 1, 0, 1, 0, 0.0);
         bonds->addBond(2*i, 2*i+1, 1.0, 10000.0);
     }
     map<int, int> contractions;
@@ -505,9 +505,9 @@ void testWithBarostat() {
     for (int i = 0; i < numMolecules; i++) {
         system.addParticle(1.0);
         system.addParticle(1.0);
-        nonbonded->addParticle(-0.2, 0.2, 0.2);
-        nonbonded->addParticle(0.2, 0.2, 0.2);
-        nonbonded->addException(2*i, 2*i+1, 0, 1, 0);
+		nonbonded->addParticle(-0.2, 0.2, 0.2, 0.0);
+		nonbonded->addParticle(0.2, 0.2, 0.2, 0.0);
+		nonbonded->addException(2 * i, 2 * i + 1, 0, 1, 0, 0.0);
         bonds->addBond(2*i, 2*i+1, 1.0, 10000.0);
     }
     RPMDIntegrator integ(numCopies, temperature, 50.0, 0.001);

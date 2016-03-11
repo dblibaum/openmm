@@ -103,7 +103,7 @@ void testTemperature() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     Context context(system, integrator, platform);
@@ -138,7 +138,7 @@ void testConstraints() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(10.0);
-        forceField->addParticle((i%2 == 0 ? 0.2 : -0.2), 0.5, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 0.2 : -0.2), 0.5, 5.0, 0.0);
     }
     for (int i = 0; i < numParticles-1; ++i)
         system.addConstraint(i, i+1, 1.0);
@@ -210,7 +210,7 @@ void testRandomSeed() {
     NonbondedForce* forceField = new NonbondedForce();
     for (int i = 0; i < numParticles; ++i) {
         system.addParticle(2.0);
-        forceField->addParticle((i%2 == 0 ? 1.0 : -1.0), 1.0, 5.0);
+		forceField->addParticle((i % 2 == 0 ? 1.0 : -1.0), 1.0, 5.0, 0.0);
     }
     system.addForce(forceField);
     vector<Vec3> positions(numParticles);
